@@ -1,0 +1,125 @@
+.search-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  border: none;
+  outline: none;
+}
+
+/* Ensure both the search bar and results have the same width */
+.search-bar, .results-container {
+  width: 599px;
+  max-width: 600px;  /* Optional: Set a max width to limit the size */
+  margin: 0 auto;  /* Center them horizontally */
+  border-radius: 10px;
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  background-color: rgb(206, 206, 206);
+}
+
+/* Animation for easing in the results */
+.results-container {
+  text-align: left;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: rgb(206, 206, 206);
+  border-radius: 30px;
+  opacity: 0;
+  transform: translateY(-20px); /* Start position above */
+  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
+}
+
+/* Make the results visible with the animation */
+.results-container.results-visible {
+  opacity: 1;
+  transform: translateY(0); /* Final position */
+}
+
+/* Adjust for when results are visible */
+.results-container.results-visible {
+  border-radius: 0px 0px 10px 10px; /* Remove top radius for the results container */
+}
+
+.search-bar.results-visible {
+  border-radius: 10px 10px 0px 0px; /* Remove bottom radius for the search bar */
+}
+
+/* Results list and items */
+.results-list {
+  list-style-type: none;
+  padding: 0;
+}
+
+.result-item {
+  background-color: #a489d6;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+/* More athletes link */
+.more-athletes {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.more-athletes a {
+  color: #000000;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.more-athletes a:hover {
+  text-decoration: underline;
+}
+
+.no-results {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+.more-athletes-page {
+  margin-top: 20px;
+  padding: 20px;
+}
+
+.more-athletes-page h2 {
+  text-align: center;
+}
+
+.results-list li {
+  font-size: 18px;
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  box-sizing: border-box;
+  outline: none; /* Removes the default outline */
+}
+
+.search-bar input:focus {
+  outline: none;  /* No outline */
+  border-color: #ccc;  /* Set the same border color as the normal state */
+}
+
+.search-bar input:focus-visible {
+  outline: none;  /* Ensure there's no outline on focus-visible */
+}
+
+/* Search bar input styles */
+input:focus {
+  outline:none;
+  background-color:rgb(231, 231, 231)
+}
+
+.Header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 10vh; 
+}
