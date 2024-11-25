@@ -1,100 +1,149 @@
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config();  // Load environment variables from .env file
-const cors = require('cors');  // To allow cross-origin requests from React frontend
+require('dotenv').config(); // Load environment variables from .env file
+const cors = require('cors'); // Allow cross-origin requests
+const bodyParser = require('body-parser'); // Middleware for parsing request bodies
 
 const app = express();
-app.use(cors());  // Allow requests from frontend
+
+// Middleware
+app.use(cors()); // Enable cross-origin requests
+app.use(express.json()); // Parse JSON requests
+app.use(bodyParser.urlencoded({ extended: true })); // Handle URL-encoded data
 
 const PORT = process.env.PORT || 5000;
-const MONGO_URI = process.env.MONGO_URI;  // Get MongoDB URI from environment variable
+const MONGO_URI = process.env.MONGO_URI; // Get MongoDB URI from environment variable
 
 // Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose
+  .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
   .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+  .catch(err => {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit the process if the connection fails
+  });
 
-// Define a schema and model for the race results
+// Define Schemas and Models
 const raceResultSchema = new mongoose.Schema({
-  Name: { type: String },
-  Gender: { type: String },
-  Race: { type: String },
-  Date: { type: String },
-  Distance: { type: String },
-  Swim: { type: String },
-  T1: { type: String },
-  Bike: { type: String },
-  T2: { type: String },
-  Run: { type: String },
-  Total: { type: String },
-  'Swim Distance': { type: Number }, // Changed to Number instead of Int32
-  'Bike Distance': { type: Number },
-  'Run Distance': { type: Number },
+  _id: String,
+  race_id: String,
+  Name: String,
+  athlete_id: String,
+  Gender: String,
+  Race: String,
+  Date: String,
+  Distance: String,
+  Swim: String,
+  T1: String,
+  Bike: String,
+  T2: String,
+  Run: String,
+  Total: String,
+  'Swim Distance': Number,
+  'Bike Distance': Number,
+  'Run Distance': Number,
+  AgeGroup: String,
 });
 
-const raceInforSchema = new mongoose.Schema({
-  Name: { type: String },
-  Distance: { type: String },
-  Date: { type: String },
-  City: { type: String },
-  State: { type: String },
-  'Swim Distance': { type: Number },
-  'Bike Distance': { type: Number },
-  'Run Distance': { type: Number },
-  'Total Participants': { type: Number },
-  'USAT Sancitioning': { type: String },
+const raceInfoSchema = new mongoose.Schema({
+  _id: String,
+  Name: String,
+  Distance: String,
+  Date: String,
+  City: String,
+  State: String,
+  Country: String,
+  'Male Participants': Number,
+  'Female Participants': Number,
+  'Swim Distance': Number,
+  'Bike Distance': Number,
+  'Run Distance': Number,
+  'USAT Sancitioning': String,
+});
+
+const athleteInfoSchema = new mongoose.Schema({
+  _id: String,
+  Name: String,
+  DOB: String,
+  Gender: String,
+  City: String,
+  State: String,
+  Country: String,
+  USAT: String,
 });
 
 const RaceResult = mongoose.model('RaceResult', raceResultSchema, 'raceResults');
-const RaceInfo = mongoose.model('RaceInfo', raceInforSchema, 'raceInfo');
+const RaceInfo = mongoose.model('RaceInfo', raceInfoSchema, 'raceInfo');
+const AthleteInfo = mongoose.model('AthleteInfo', athleteInfoSchema, 'athleteInfo');
 
-// API route to fetch race results
+// Routes
+// Fetch race results
 app.get('/api/raceResults', async (req, res) => {
-  const { name } = req.query;
+  const { id, name } = req.query;
 
   try {
-    let results;
-    const query = {};
+    let query = {};
 
-    // Filter by name if it's provided
-    if (name) {
-      query.Name = { $regex: name, $options: 'i' };  // Case-insensitive search
+    if (id) {
+      query._id = id; // Match by unique ID
+    } else if (name) {
+      query.Name = { $regex: name, $options: 'i' }; // Case-insensitive name search
     }
 
-    results = await RaceResult.find(query);  // Find race results with the query conditions
+    // Fetch the results based on query
+    const results = await RaceResult.find(query);
 
-    res.json(results);  // Send the results as JSON
+    if (id && results.length === 1) {
+      // If searching by ID and exactly one result is found, return the single object
+      return res.json(results[0]);
+    }
+
+    res.json(results); // Return all matching results as an array
   } catch (err) {
     console.error('Error fetching race results:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
-// API route to fetch race information
+
+// Fetch race information
 app.get('/api/raceInfo', async (req, res) => {
   const { name, city, state } = req.query;
-
   try {
-    let results;
     const query = {};
+    if (name) query.Name = { $regex: name, $options: 'i' };
+    if (city) query.City = { $regex: city, $options: 'i' };
+    if (state) query.State = { $regex: state, $options: 'i' };
 
-    // Filter by race name if it's provided
-    if (name) {
-      query.Name = { $regex: name, $options: 'i' };  // Case-insensitive search
-    }
-
-    results = await RaceInfo.find(query);  // Find race info with the query conditions
-
-    // If no results were found, return an empty array
-    if (!results || results.length === 0) {
-      res.json([]);
-    } else {
-      res.json(results);  // Send the results as JSON
-    }
+    const results = await RaceInfo.find(query);
+    res.json(results);
   } catch (err) {
     console.error('Error fetching race info:', err);
     res.status(500).json({ error: 'Server error' });
   }
+});
+
+// Fetch athlete information
+app.get('/api/athleteInfo', async (req, res) => {
+  const { name } = req.query;
+
+  try {
+    const query = {};
+    if (name) {
+      query.Name = { $regex: name, $options: 'i' }; // Case-insensitive search
+    }
+
+    const results = await AthleteInfo.find(query);
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching athlete info:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Default route for server status
+app.get('/', (req, res) => {
+  res.json({ message: 'API is running successfully!' });
 });
 
 // Start the server

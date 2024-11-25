@@ -165,3 +165,57 @@ input:focus {
   padding: 20px;
   border: 1px solid #ccc;
 }
+
+.race-container {
+  font-family: Arial, sans-serif;
+  width: 50vw; /* Set the container to span 50% of the viewport width */
+  margin: 0; /* Remove default centering */
+  padding: 20px;
+}
+
+.race-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.race-item {
+  border-bottom: 1px solid #ddd;
+  padding: 20px 0;
+}
+
+.race-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.race-title {
+  font-size: 1.5em;
+  margin: 0;
+}
+
+.race-details {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.race-body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.race-age-group {
+  font-weight: bold;
+  color: #444;
+}
+
+.race-time {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #333;
+}

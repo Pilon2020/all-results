@@ -7,7 +7,7 @@ function MoreResults() {
   const [results, setResults] = useState([]);
   const location = useLocation();
   const searchQuery = new URLSearchParams(location.search).get('query'); // Get query from URL
-  console.log(searchQuery)
+
   // Fetch race info and race results based on the search query
   useEffect(() => {
     const fetchRaceInfo = async () => {
@@ -21,7 +21,6 @@ function MoreResults() {
         const response = await fetch(`http://localhost:5000/api/raceInfo?name=${trimmedQuery}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Race Info:', data); // Log the fetched race info
           setRaceInfo(data);
         } else {
           console.error('Error fetching race info:', response.statusText);
@@ -41,7 +40,6 @@ function MoreResults() {
         const response = await fetch(`http://localhost:5000/api/raceResults?name=${searchQuery.trim()}`);
         if (response.ok) {
           const data = await response.json();
-          console.log('Race Results:', data); // Log the fetched race results
           setRaceResults(data);
         } else {
           console.error('Error fetching race results:', response.statusText);
@@ -53,10 +51,9 @@ function MoreResults() {
 
     fetchRaceInfo();
     fetchRaceResults();
-}, [searchQuery]);
+  }, [searchQuery]);
 
-
-  // Combine race info and race results, and filter out duplicates based on name
+  // Combine race info and race results, and filter out duplicates based on name and date
   useEffect(() => {
     const combinedResults = [
       ...raceInfo.map(info => ({
@@ -68,7 +65,7 @@ function MoreResults() {
       })),
       ...raceResults.map(result => ({
         type: 'athlete',
-        _id: result._id,
+        _id: result.athlete_id,
         name: result.Name,
         gender: result.Gender,
         race: result.Race,
@@ -77,26 +74,32 @@ function MoreResults() {
       })),
     ];
 
-    console.log('Combined Results:', combinedResults); // Log combined results
-
-    // Filter out duplicates based on the name
-    const uniqueResultsByName = combinedResults.filter((result, index, self) =>
-      index === self.findIndex((r) => (
-        r.name.toLowerCase() === result.name.toLowerCase()
-      ))
-    );
-
-    console.log('Unique Results By Name:', uniqueResultsByName); // Log unique results
-
-    const sortedResults = uniqueResultsByName.sort((a, b) => {
-      const aName = a.name.toLowerCase();
-      const bName = b.name.toLowerCase();
-      return aName.localeCompare(bName);
+    // Filter unique results based on type
+    const uniqueResults = combinedResults.filter((result, index, self) => {
+      if (result.type === 'race') {
+        // For 'race' type, uniqueness is determined by both name and date
+        return index === self.findIndex(r => r.type === 'race' && r.name.toLowerCase() === result.name.toLowerCase() && r.date === result.date);
+      } else {
+        // For 'athlete' type, uniqueness is determined by name only
+        return index === self.findIndex(r => r.type === 'athlete' && r.name.toLowerCase() === result.name.toLowerCase());
+      }
     });
 
-    setResults(sortedResults); // Set the combined, sorted results in state
-}, [raceInfo, raceResults]);
+    // Sort results
+    const sortedResults = uniqueResults.sort((a, b) => {
+      if (a.type === 'athlete' && b.type === 'athlete') {
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      } else if (a.type === 'race' && b.type === 'race') {
+        return a.name.toLowerCase().localeCompare(b.name.toLowerCase()) || new Date(a.date) - new Date(b.date);
+      } else {
+        // Sort athletes before races
+        return a.type === 'athlete' ? -1 : 1;
+      }
+    });
 
+
+    setResults(sortedResults); // Set the combined, sorted results in state
+  }, [raceInfo, raceResults]);
 
   return (
     <div className="MoreResults">
@@ -105,24 +108,27 @@ function MoreResults() {
         <div className="full-results-container">
           {results.length > 0 ? (
             <ul className="full-results-list">
-                {results.map((result, index) => (
+              {results.map((result, index) => (
                 <li key={result._id} className="full-result-item">
-                    <Link to={`/${result.type}/${result._id}`} className="result-link">
+                  <Link to={`/${result.type}/${result._id}`} className="result-link">
                     <strong>{result.name}</strong>
                     {result.type === 'race' ? (
-                        <>
+                      <>
                         <span className="result-date"> - {result.date}</span>
                         <br />
                         <em>{result.location}</em>
-                        </>
-                    ) : (<></>)}
-                    </Link>
+                      </>
+                    ) : (
+                      <>
+                      </>
+                    )}
+                  </Link>
                 </li>
-                ))}
+              ))}
             </ul>
-            ) : (
+          ) : (
             <p className="no-results">No matching results found</p>
-            )}
+          )}
         </div>
       )}
     </div>

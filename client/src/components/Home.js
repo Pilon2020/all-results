@@ -5,18 +5,16 @@ function Home() {
   const [raceInfo, setRaceInfo] = useState([]);
   const [raceResults, setRaceResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [highlightedIndex, setHighlightedIndex] = useState(-1); // State for highlighted index
-  const navigate = useNavigate(); // Using useNavigate for navigation
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const navigate = useNavigate();
 
-  // Fetch race information
+  // Fetch data for race info and race results
   useEffect(() => {
     const fetchRaceInfo = async () => {
       if (!searchQuery.trim()) {
         setRaceInfo([]);
-        setRaceResults([]);
         return;
       }
-
       try {
         const trimmedQuery = searchQuery.trim().toLowerCase();
         const response = await fetch(`http://localhost:5000/api/raceInfo?name=${trimmedQuery}`);
@@ -36,9 +34,9 @@ function Home() {
         setRaceResults([]);
         return;
       }
-
       try {
-        const response = await fetch(`http://localhost:5000/api/raceResults?name=${searchQuery.trim()}`);
+        const trimmedQuery = searchQuery.trim().toLowerCase();
+        const response = await fetch(`http://localhost:5000/api/raceResults?name=${trimmedQuery}`);
         if (response.ok) {
           const data = await response.json();
           setRaceResults(data);
@@ -58,52 +56,61 @@ function Home() {
     setSearchQuery(event.target.value);
   };
 
-  // Combine race info and race results, and filter out duplicates based on name
-  const combinedResults = [
-    ...raceInfo.map(info => ({
-      type: 'race',
-      _id: info._id,
-      name: info.Name,
-      date: info.Date,
-      location: `${info.City}, ${info.State}`,
-    })),
-    ...raceResults.map(result => ({
-      type: 'athlete',
-      _id: result._id,
-      name: result.Name,
-      gender: result.Gender,
-      race: result.Race,
-      date: result.Date,
-      total: result.Total,
-    })),
-  ];
+  // Combine race info and race results
+const combinedResults = [
+  ...raceInfo.map(info => ({
+    type: 'race',
+    _id: info._id,
+    name: info.Name,
+    date: info.Date,
+    location: `${info.City}, ${info.State}`,
+  })),
+  ...raceResults.map(result => ({
+    type: 'athlete',
+    _id: result.athlete_id,  // Assuming this is the field in the database
+    name: result.Name,
+    gender: result.Gender,
+    race: result.Race,
+    date: result.Date,
+    total: result.Total,
+  })),
+];
 
-  // Filter out duplicates based on the name
-  const uniqueResultsByName = combinedResults.filter((result, index, self) =>
-    index === self.findIndex((r) => (
-      r.name.toLowerCase() === result.name.toLowerCase()
-    ))
-  );
+// Filter unique results based on type
+const uniqueResults = combinedResults.filter((result, index, self) => {
+  if (result.type === 'race') {
+    // For 'race' type, uniqueness is determined by both name and date
+    return index === self.findIndex(r => r.type === 'race' && r.name.toLowerCase() === result.name.toLowerCase() && r.date === result.date);
+  } else {
+    // For 'athlete' type, uniqueness is determined by name only
+    return index === self.findIndex(r => r.type === 'athlete' && r.name.toLowerCase() === result.name.toLowerCase());
+  }
+});
 
-  const sortedResults = uniqueResultsByName.sort((a, b) => {
-    const aName = a.name.toLowerCase();
-    const bName = b.name.toLowerCase();
-    return aName.localeCompare(bName);
-  });
+// Sort results
+const sortedResults = uniqueResults.sort((a, b) => {
+  if (a.type === 'athlete' && b.type === 'athlete') {
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+  } else if (a.type === 'race' && b.type === 'race') {
+    return a.name.toLowerCase().localeCompare(b.name.toLowerCase()) || new Date(a.date) - new Date(b.date);
+  } else {
+    // Sort athletes before races
+    return a.type === 'athlete' ? -1 : 1;
+  }
+});
+
 
   const topResults = sortedResults.slice(0, 5);
 
-  // Handle key navigation and selection
+  // Handle navigation and highlighting
   const handleKeyDown = (event) => {
-    const totalResults = topResults.length + (uniqueResultsByName.length > 5 ? 1 : 0); // Include "More Results"
-    
+    const totalResults = topResults.length + (uniqueResults.length > 5 ? 1 : 0);
     if (event.key === 'ArrowDown') {
       setHighlightedIndex((prevIndex) => Math.min(prevIndex + 1, totalResults - 1));
     } else if (event.key === 'ArrowUp') {
       setHighlightedIndex((prevIndex) => Math.max(prevIndex - 1, 0));
     } else if (event.key === 'Enter') {
       if (highlightedIndex === -1 || highlightedIndex === topResults.length) {
-        // Go to More Results page
         navigate(`/more-results?query=${searchQuery}`);
       } else {
         const selectedResult = topResults[highlightedIndex];
@@ -112,23 +119,24 @@ function Home() {
     }
   };
 
-  // Go to more results page with the search query
   const goToMoreResults = () => {
     navigate(`/more-results?query=${searchQuery}`);
   };
 
   return (
-    <div className="Home" onKeyDown={handleKeyDown} tabIndex="0"> {/* Add tabIndex to enable key events */}
+    <div className="Home" onKeyDown={handleKeyDown} tabIndex="0">
       <div className="Header">
-        <h1>All Results</h1>
+        <h1>Search Results</h1>
       </div>
       <div className="search-container">
         <input
           type="text"
           value={searchQuery}
           onChange={handleSearchChange}
-          placeholder="Search by Race Name"
-          className={`search-bar ${searchQuery.trim() ? 'has-input' : ''} ${raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''}`}
+          placeholder="Search by race name or athlete"
+          className={`search-bar ${searchQuery.trim() ? 'has-input' : ''} ${
+            raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''
+          }`}
         />
       </div>
       {searchQuery && (
@@ -139,10 +147,7 @@ function Home() {
                 <li
                   key={result._id}
                   className={`result-item ${highlightedIndex === index ? 'highlighted' : ''}`}
-                  onClick={() => {
-                    const selectedResult = result;
-                    navigate(`/${selectedResult.type}/${selectedResult._id}`);
-                  }}
+                  onClick={() => navigate(`/${result.type}/${result._id}`)}
                 >
                   <Link to={`/${result.type}/${result._id}`} className="result-link">
                     <strong>{result.name}</strong>
@@ -152,16 +157,20 @@ function Home() {
                         <br />
                         <em>{result.location}</em>
                       </>
-                    ) : (<></>)}
+                    ) : (
+                      <>
+
+                      </>
+                    )}
                   </Link>
                 </li>
               ))}
-              {uniqueResultsByName.length > 5 && (
+              {uniqueResults.length > 5 && (
                 <li
                   className={`result-item ${highlightedIndex === topResults.length ? 'highlighted' : ''}`}
                   onClick={goToMoreResults}
                 >
-                  <Link to={`/more-results?query=${searchQuery}`} className="result-link More-resutls">
+                  <Link to={`/more-results?query=${searchQuery}`} className="result-link more-results">
                     <strong>More Results</strong>
                   </Link>
                 </li>
