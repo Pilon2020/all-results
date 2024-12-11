@@ -77,40 +77,51 @@ function Athlete() {
   const matchingResults = raceResults.filter(result => result.Name === athlete?.Name);
 
   return (
-    <div>
+    <div className='content'>
       {athlete ? (
-        <div>
+        <div className='body'>
           <h1>{athlete.Name}</h1>
           <p>Hometown: {athlete.City} {athlete.State}, {athlete.Country}</p>
           <p>Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}</p> {/* Display calculated age */}
-          <br></br>
-          <br></br>
-          <h2>Matching Race Results:</h2>
-          <div className="race-container">
-            {matchingResults.length > 0 ? (
-              <ul className="race-list">
-                {matchingResults.map((result, index) => (
-                  <Link to={`/analysis/${result.race_id}`}>
-                  <li key={index} className="race-item">
-                    <div className="race-header">
-                      <h2 className="race-title">{result.Race}</h2>
-                      <div className="race-details">
-                        <span className="race-date">{result.Date}</span>
-                        <span className="race-location">{result.Location}</span>
-                      </div>
-                    </div>
-                    <div className="race-body">
-                      <span className="race-age-group">{result.AgeGroup}</span>
-                      <span className="race-time">{result.Total}</span>
-                    </div>
-                  </li>
-                  </Link>
-                ))}
-              </ul>
-            ) : (
-              <p>No race results found.</p>
-            )}
-          </div>
+
+            <div className="athlete-container">
+              <div className="athlete-main">
+              <h2 style={{paddingLeft:'10px'}}>Race Results:</h2>
+                {matchingResults.length > 0 ? (
+                  <ul className="race-list">
+                  {matchingResults.map((result, index) => (
+                    <a href={`/analysis/${result.race_id}`} key={index}>
+                      <li className="race-item">
+                        <div className="race-header">
+                          <h2 className="race-title">{result.Race}</h2>
+                          <div className="race-details">
+                            <span className="race-date">{result.Date}</span>
+                            <span className="race-location">{result.Location}</span>
+                          </div>
+                        </div>
+                        <div className="race-body">
+                          <div className="race-info">
+                            <span className="race-age-group">{result.AgeGroup}</span>
+                          </div>
+                          <div className="race-time">
+                            <span className="bold-time">{result.Total}</span>
+                          </div>
+                        </div>
+                      </li>
+                    </a>
+                  ))}
+                </ul>                
+                ) : (
+                  <p>No race results found.</p>
+                )}
+              </div>
+              <div className="athlete-sidebar">
+                <h2>Stats:</h2>
+                <div className='athletestats'>
+                <p>More stats to be added here</p>
+                </div>
+              </div>
+            </div>
         </div>
       ) : (
         <p>No athlete data found</p>

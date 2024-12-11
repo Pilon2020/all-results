@@ -126,7 +126,7 @@ const sortedResults = uniqueResults.sort((a, b) => {
   return (
     <div className="Home" onKeyDown={handleKeyDown} tabIndex="0">
       <div className="Header">
-        <h1>Search Results</h1>
+        <h1>ALL RESULTS</h1>
       </div>
       <div className="search-container">
         <input

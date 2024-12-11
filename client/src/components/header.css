@@ -1,97 +1,137 @@
 /* Main header container */
 .header {
-    display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 10px 20px;
+    padding:0px 20px;
     background-color: #f8f8f8;
   }
   
   /* Header content */
   .header-content {
     display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    align-items:center;
+    justify-content: space-between;
+    /* position: relative; Ensure `.results-container-h` aligns within `.header-content` */
   }
-  
+
+  .headerlink {
+    text-decoration: none;
+  }
+
+  .headerlink:visited {
+    color: #000000;
+  }
+
+
+
+
+.search-container-h {
+    justify-content: center;
+    border: none;
+    outline: none;
+    width: 30vw;
+  }
+
   /* Search input styles */
-  .search-container {
-    margin-left: auto; /* Push search bar to the right */
-  }
-  
-  .search-bar {
-    width: 200px;
+.search-bar-h, .results-container-h {
+    width: 30vw;
+    float: right;
+    border-radius: 10px;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 20px;
-    margin-right: 10px;
-  }
-  
-  .search-bar.has-input {
-    background-color: #f0f0f0;
-  }
-  
-  .results-container {
-    width: 100%;
-    max-width: 600px;
-    margin-top: 10px;
-    padding: 10px;
+    font-size: 16px;
+    border: none;
+    outline: none;
     background-color: rgb(206, 206, 206);
-    border-radius: 0px 0px 10px 10px;
+    z-index: 10;
+  }
+
+  .search-bar-h.has-input {
+    border-bottom: 3px solid #888888; 
+  }
+
+  /* Animation for easing in the results */
+  .results-container {
+    max-height: auto;
+    overflow-y: auto;
+    background-color: rgb(206, 206, 206);
+    border-radius: 30px;
     opacity: 0;
     transform: translateY(-20px); /* Start position above */
     transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
   }
-  
-  /* Make results visible */
-  .results-container.results-visible {
-    opacity: 1;
-    transform: translateY(0); /* Final position */
-  }
-  
-  /* Results list styles */
-  .results-list {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
-  }
-  
-  .result-item {
-    background-color: #474747;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    transition: background-color 0.3s ease;
-  }
-  
-  .result-item:hover {
-    background-color: #adadad;
-  }
-  
-  .result-link {
-    text-decoration: none;
-    color: white;
-  }
-  
-  .result-item:hover .result-link {
-    color: white;
-  }
-  
-  .highlighted {
-    background-color: #c7c7c7;
-  }
-  
-  .no-results {
-    color: #777;
-  }
-  
-  .more-results {
-    text-align: center;
-    margin-top: 10px;
-  }
-  
-  .more-results a {
-    font-weight: bold;
-    text-decoration: none;
-  }
-  
+
+/* Make the results visible with the animation */
+.results-container.results-visible {
+  opacity: 1;
+  transform: translateY(0); /* Final position */
+}
+
+/* Adjust for when results are visible */
+.results-container-h.results-visible {
+  border-radius: 0px 0px 10px 10px; /* Remove top radius for the results container */
+  margin-top: -22px;
+}
+
+.search-bar-h.results-visible {
+  border-radius: 10px 10px 0px 0px; /* Remove bottom radius for the search bar */
+  position: relative;
+  z-index: 1000; /* Ensure this is higher than other elements */
+
+}
+/* Results list and items */
+.results-list-h {
+  list-style-type: none;
+  padding: 0;
+  margin-top:10px;
+  margin-bottom:0px;
+}
+
+.result-item-h {
+  background-color: #474747;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease; /* Smooth hover transition */
+  transform: translateY(var(--results-offset))
+}
+
+/* Change the background color when hovering over the entire item */
+.result-item:hover {
+  background-color: #adadad; 
+}
+
+.result-item.highlighted{
+  background-color: #adadad;
+}
+
+.result-item a {
+  text-decoration: none; /* Optional: remove underline from links */
+  color: white; /* Ensure the text is readable against the background */
+}
+
+.result-item:hover a {
+  color: white; /* Optional: change link color on hover if needed */
+}
+
+/* More athletes link */
+.more-athletes {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.more-athletes a {
+  color: #000000;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.more-athletes a:hover {
+  text-decoration: underline;
+}
+
+.no-results {
+  color: #d9534f;
+  font-weight: bold;
+}
+
+.result-link {
+  color: white;
+}

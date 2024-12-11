@@ -1,3 +1,11 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
 .search-container {
   margin-top: 20px;
   display: flex;
@@ -8,8 +16,7 @@
 
 /* Ensure both the search bar and results have the same width */
 .search-bar, .results-container {
-  width: 599px;
-  max-width: 600px;  /* Optional: Set a max width to limit the size */
+  width: 50vw;
   margin: 0 auto;  /* Center them horizontally */
   border-radius: 10px;
   padding: 10px;
@@ -115,7 +122,6 @@
 .search-bar input {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ccc;
   border-radius: 20px;
   box-sizing: border-box;
   outline: none; /* Removes the default outline */
@@ -152,7 +158,12 @@ input:focus {
 }
 
 .body {
-  padding: 20px;
+  text-align: left  ;
+  max-width: 100%; /* Constrain text width for readability */
+  padding: 0px 20px 10px;
+  background: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
 }
 
 .full-results-list {
@@ -161,44 +172,50 @@ input:focus {
 }
 
 .full-result-item {
-  background-color: #474747;
+  background-color: #919191;
   padding: 20px;
   border: 1px solid #ccc;
+  border-radius: 20px;
+  margin-bottom: 10px;
 }
 
 .race-container {
   font-family: Arial, sans-serif;
   width: 50vw; /* Set the container to span 50% of the viewport width */
   margin: 0; /* Remove default centering */
-  padding: 20px;
+  padding: 0px;
 }
 
 .race-list {
   list-style-type: none;
-  padding: 0;
-  margin: 0;
+  padding: 10px;
+  margin: 0px;
 }
 
 .race-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   border-bottom: 1px solid #ddd;
-  padding: 20px 0;
+  padding: 10px;
+  background-color: #919191;
+  border-radius: 20px;
+  margin-bottom: 10px;
 }
 
 .race-header {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin-bottom: 10px;
 }
 
 .race-title {
   font-size: 1.5em;
+  font-weight: bold;
   margin: 0;
 }
 
 .race-details {
-  display: flex;
-  justify-content: space-between;
   font-size: 0.9em;
   color: #666;
 }
@@ -206,16 +223,76 @@ input:focus {
 .race-body {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  width: 100%;
 }
 
-.race-age-group {
-  font-weight: bold;
-  color: #444;
+.race-info {
+  flex: 1;
 }
 
 .race-time {
+  flex: 0 0 10%;
   font-size: 1.2em;
   font-weight: bold;
   color: #333;
+  font-weight: bold;
+}
+
+.content {
+  display: flex; /* Enables flexbox layout */
+  flex-direction: column; /* Stacks items vertically */
+  justify-content: left; /* Centers content vertically */
+  align-items: left; /* Centers content horizontally */
+  width: 100%; 
+  height: 100%;
+  background-color: #f5f5f5; /* Light background for visibility */
+  padding: 0px 10px 10px;
+  box-sizing: border-box; /* Includes padding in height/width calculations */
+}
+
+a{
+  text-decoration: none;
+  color: #ffffff;
+}
+
+a:visited{
+  color: #ffffff;
+}
+
+.athlete-container {
+  display: flex;
+  width: 100%; /* Ensures it spans the full width */
+  gap: 20px; /* Spacing between the two sections */
+  box-sizing: border-box; /* Includes padding in width calculations */
+}
+
+.athlete-main {
+  flex: 3; /* Takes 75% of the width */
+  background-color: #f4f4f4; /* Add color for debugging */
+  border-radius: 8px;
+  padding: 0px 0px 0px 0px;
+  margin: 0px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.athlete-sidebar {
+  flex: 1; /* Takes 25% of the width */
+  background-color: #f4f4f4; /* Add color for debugging */
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+body.h1 {
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  margin: 0;
+  padding: 10px 0px;
+}
+
+.race-list a{
+  color:#000000;
 }

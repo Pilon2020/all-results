@@ -102,15 +102,16 @@ function MoreResults() {
   }, [raceInfo, raceResults]);
 
   return (
-    <div className="MoreResults">
-      <h1>More Results</h1>
+    <div className={'MoreResults, content'}>
+      <div className='body'>
+      <h1>Results</h1>
       {searchQuery && (
         <div className="full-results-container">
           {results.length > 0 ? (
             <ul className="full-results-list">
               {results.map((result, index) => (
                 <li key={result._id} className="full-result-item">
-                  <Link to={`/${result.type}/${result._id}`} className="result-link">
+                  <a href={`/${result.type}/${result._id}`} className="result-link">
                     <strong>{result.name}</strong>
                     {result.type === 'race' ? (
                       <>
@@ -122,7 +123,7 @@ function MoreResults() {
                       <>
                       </>
                     )}
-                  </Link>
+                  </a>
                 </li>
               ))}
             </ul>
@@ -131,6 +132,7 @@ function MoreResults() {
           )}
         </div>
       )}
+    </div>
     </div>
   );
 }
