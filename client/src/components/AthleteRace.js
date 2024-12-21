@@ -34,24 +34,37 @@ const RaceInfo = () => {
   useEffect(() => {
     const fetchRaceResults = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/api/raceResults', {
-          params: {
-            Athlete_id: id2, // Pass id2 (athlete ID) as a query parameter
-            Race_id: id1,     // Pass id1 (race ID) as a query parameter
-          },
-        });
-        console.log('Race Results Response:', response.data);
-        setRaceResults(response.data); // Store the response in state
+        // Fetch all race results from the API
+        const response = await axios.get('http://localhost:5000/api/raceResults');
+        const allResults = response.data;
+  
+        console.log('All Race Results:', allResults);
+  
+        // Filter results by Race ID (id1)
+        const raceFilteredResults = allResults.filter((result) => result.Race_id === id1);
+  
+        console.log('Filtered Results by Race ID:', raceFilteredResults);
+  
+        // Further filter results by Athlete ID (id2)
+        const athleteFilteredResults = raceFilteredResults.filter(
+          (result) => result.Athlete_id === id2
+        );
+  
+        console.log('Filtered Results by Athlete ID:', athleteFilteredResults);
+  
+        // Store the doubly filtered results in state
+        setRaceResults(athleteFilteredResults);
       } catch (err) {
         setError('Error fetching race results: ' + (err.response?.data?.error || err.message));
         console.error('Error:', err);
       }
     };
-
-    if (id2 && id1) {
+  
+    if (id1) { // Ensure Race ID is available
       fetchRaceResults();
     }
-  }, [id2, id1]); // Dependencies to trigger fetching when id1 or id2 changes
+  }, [id1, id2]); // Dependencies
+   // Dependencies to trigger fetching when id1 or id2 changes
 
   if (error) {
     return <div>{error}</div>;

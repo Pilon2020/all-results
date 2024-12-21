@@ -1,3 +1,89 @@
+.SignInButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.SignInButton:hover {
+  background-color: #0056b3;
+}
+
+/* Modal */
+.Modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ModalContent {
+  background-color: white;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 300px;
+}
+
+.ModalContent h2 {
+  margin-bottom: 1rem;
+}
+
+.ModalContent form {
+  display: flex;
+  flex-direction: column;
+}
+
+.ModalContent form label {
+  margin-bottom: 0.5rem;
+}
+
+.ModalContent form input {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.ModalContent button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.ModalContent button:hover {
+  background-color: #0056b3;
+}
+
+.CloseButton {
+  background-color: #dc3545;
+  margin-top: 1rem;
+}
+
+.CloseButton:hover {
+  background-color: #c82333;
+}
+
+/* Sign Up Link */
+.SignUpLink {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.SignUpLink:hover {
+  text-decoration: underline;
+}
+
 html, body {
   margin: 0;
   padding: 0;
@@ -148,9 +234,29 @@ input:focus {
 
 .Header {
   display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 10vh; 
+  justify-content: space-between; /* Space between the h1 and button */
+  align-items: center; /* Vertically center the items */
+  height: 10vh;
+  margin: 10px;
+}
+
+.Header h1 {
+  flex-grow: 1; /* Allows the h1 to take up available space */
+  text-align: center; /* Centers the h1 text */
+  margin: 0; /* Remove default margin from the h1 */
+}
+
+.SignInButton {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.SignInButton:hover {
+  background-color: #0056b3;
 }
 
 .More-results {
@@ -295,4 +401,80 @@ h2 {
 
 .race-list a{
   color:#000000;
+}
+
+.SignUpContainer {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 2vh;
+  background-color: #f5f5f5;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.SignUpContainer h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.SignUpContainer form {
+  display: flex;
+  flex-direction: column;
+}
+
+.SignUpContainer form label {
+  margin-bottom: 0.5rem;
+}
+
+.SignUpContainer form input {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.SignUpContainer button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.SignUpContainer button:hover {
+  background-color: #0056b3;
+}
+
+.Error {
+  color: red;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.SignInLink {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.SignInLink:hover {
+  text-decoration: underline;
+}
+
+.BirthdaySelectors {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 1rem;
+}
+
+.BirthdaySelectors select, 
+.BirthdaySelectors input {
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  width: 30%;
+  height: 100%;
 }

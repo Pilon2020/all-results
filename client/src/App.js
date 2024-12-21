@@ -5,7 +5,11 @@ import Athlete from './components/Athlete';
 import Race from './components/Race';
 import MoreResults from './components/MoreSearch';
 import Analysis from './components/AthleteRace';
-import Header from './components/Header'; // Import the Header component
+import Header from './components/Header';
+import Signup from './components/signup';
+import SignIn from './components/SignIn';
+import Profile from './components/Profile';
+
 import './App.css';
 
 function App() {
@@ -25,6 +29,9 @@ function App() {
         <Route path="/athlete/:id" element={<Athlete />} />
         <Route path="/more-results" element={<MoreResults />} />
         <Route path="/analysis/:id1/:id2" element={<Analysis />} />
+        <Route path="/SignUp" element={<Signup />} />
+        <Route path="/Profile" element={<Profile />} /> {/* Profile Page */}
+        <Route path="/SignIn" element={<SignIn />} /> {/* Sign In Page */}
       </Routes>
     </div>
   );
