@@ -37,7 +37,7 @@ function MoreResults() {
       }
 
       try {
-        const response = await fetch(`http://localhost:5000/api/raceResults?name=${searchQuery.trim()}`);
+        const response = await fetch(`http://localhost:5000/api/athleteInfo?name=${searchQuery.trim()}`);
         if (response.ok) {
           const data = await response.json();
           setRaceResults(data);
@@ -65,7 +65,7 @@ function MoreResults() {
       })),
       ...raceResults.map(result => ({
         type: 'athlete',
-        _id: result.athlete_id,
+        _id: result._id,
         name: result.Name,
         gender: result.Gender,
         race: result.Race,

@@ -90,7 +90,7 @@ function Athlete() {
                 {matchingResults.length > 0 ? (
                   <ul className="race-list">
                   {matchingResults.map((result, index) => (
-                    <a href={`/analysis/${result.race_id}`} key={index}>
+                    <a href={`/analysis/${result.Race_id}/${athlete._id}`} key={index}>
                       <li className="race-item">
                         <div className="race-header">
                           <h2 className="race-title">{result.Race}</h2>

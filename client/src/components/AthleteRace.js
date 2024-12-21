@@ -1,57 +1,93 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import axios from 'axios';
 
-function Analysis() {
-  const { id } = useParams(); // Get the race ID from the URL
-  const [raceInfo, setRaceInfo] = useState(null); // Race-specific info
-  const [result, setRaceResults] = useState(null); // Race-specific results
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+const RaceInfo = () => {
+  const { id1, id2 } = useParams(); // Get id1 (race ID) and id2 (athlete ID) from URL
+  const [raceInfo, setRaceInfo] = useState(null);
+  const [raceResults, setRaceResults] = useState(null); // For storing race results data
+  const [error, setError] = useState(null);
 
+  // Fetch race info
   useEffect(() => {
-    const fetchRaceData = async () => {
-      setLoading(true); // Set loading to true before fetching
-      setError(null); // Clear any previous errors
+    const fetchRaceInfo = async () => {
       try {
-        // Fetch race info
-        const raceInfoResponse = await fetch(`http://localhost:5000/api/raceInfo?id=${id}`);
-        const raceResultsResponse = await fetch(`http://localhost:5000/api/raceResults?id=${id}`);
-        if (!raceInfoResponse.ok || !raceResultsResponse.ok) {
-          throw new Error('Failed to fetch race data.');
-        }
-
-        const raceInfoData = await raceInfoResponse.json();
-        const raceResultsData = await raceResultsResponse.json();
-        console.log(raceInfoData)
-        setRaceInfo(raceInfoData);
-        setRaceResults(raceResultsData);
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false); // Ensure loading is false after fetch completes
+        const response = await axios.get('http://localhost:5000/api/raceInfo', {
+          params: {
+            id: id1, // Pass id1 (race ID) as a query parameter
+          },
+        });
+        console.log('Race Info Response:', response.data);
+        setRaceInfo(response.data);  // Store the response in state
+      } catch (err) {
+        setError('Error fetching race info: ' + (err.response?.data?.error || err.message));
+        console.error('Error:', err);
       }
     };
 
-    fetchRaceData();
-  }, [id]);
+    if (id1) {
+      fetchRaceInfo();
+    }
+  }, [id1]);
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
+  // Fetch race results based on athlete_id (id2) and race_id (id1)
+  useEffect(() => {
+    const fetchRaceResults = async () => {
+      try {
+        const response = await axios.get('http://localhost:5000/api/raceResults', {
+          params: {
+            Athlete_id: id2, // Pass id2 (athlete ID) as a query parameter
+            Race_id: id1,     // Pass id1 (race ID) as a query parameter
+          },
+        });
+        console.log('Race Results Response:', response.data);
+        setRaceResults(response.data); // Store the response in state
+      } catch (err) {
+        setError('Error fetching race results: ' + (err.response?.data?.error || err.message));
+        console.error('Error:', err);
+      }
+    };
+
+    if (id2 && id1) {
+      fetchRaceResults();
+    }
+  }, [id2, id1]); // Dependencies to trigger fetching when id1 or id2 changes
+
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  if (!raceInfo || !raceResults) {
+    return <div>Loading...</div>;
+  }
+
+  
 
   return (
-    <div>
-      {/* Race Info Section */}
-      {raceInfo ? (
+    <div style={{padding:'10px'}}>
+      {raceInfo.length === 0 ? (
+        <div>No race info found for this ID.</div>
+      ) : (
         <div>
-          <h1>Race: {raceInfo.Name}</h1>
-          <p>Date: {raceInfo.Date}</p>
-          <p>Location: {raceInfo.City}</p>
+          <h1>{raceResults[0].Name} - {raceInfo[0].Name} {raceInfo[0].Date.split('/')[2]}</h1>
+          <p>{raceInfo[0].City}, {raceInfo[0].State} - <strong>{raceInfo[0].Date}</strong></p> 
+        </div>
+      )}
+      <h2>Quick Facts</h2>
+        <div>
+          <p>Age Group: <strong>{raceResults[0].AgeGroup}</strong> </p>
+        </div>
+      <h2>Splits</h2>
+      {raceResults ? (
+        <div>
+          <p><strong>Swim:</strong> {raceResults[0].Swim} | <strong>T1:</strong> {raceResults[0].T1} | <strong>Bike:</strong> {raceResults[0].Bike} | <strong>T2:</strong> {raceResults[0].T2} | <strong>Run:</strong> {raceResults[0].Run}</p>
+          <p><strong>Total Time:</strong> {raceResults[0].Total}</p>
         </div>
       ) : (
-        <p>No race info found.</p>
+        <div>No results found for this athlete in this race.</div>
       )}
     </div>
   );
-}
+};
 
-export default Analysis;
+export default RaceInfo;

@@ -46,7 +46,7 @@ const raceResultSchema = new mongoose.Schema({
 });
 
 const raceInfoSchema = new mongoose.Schema({
-  _id: String,
+  _id: mongoose.Schema.Types.ObjectId, // Correcting to ObjectId
   Name: String,
   Distance: String,
   Date: String,
@@ -60,6 +60,7 @@ const raceInfoSchema = new mongoose.Schema({
   'Run Distance': Number,
   'USAT Sancitioning': String,
 });
+
 
 const athleteInfoSchema = new mongoose.Schema({
   _id: String,
@@ -79,17 +80,23 @@ const AthleteInfo = mongoose.model('AthleteInfo', athleteInfoSchema, 'athleteInf
 // Routes
 // Fetch race results
 app.get('/api/raceResults', async (req, res) => {
-  const { id, name } = req.query;
+  const { id, name, athlete_id, race_id } = req.query;
 
   try {
     let query = {};
 
     if (id) {
       query._id = id; // Match by unique ID
-    } else if (name) {
+    }
+    if (name) {
       query.Name = { $regex: name, $options: 'i' }; // Case-insensitive name search
     }
-
+    if (athlete_id) {
+      query.athlete_id = athlete_id;
+    }
+    if (race_id) {
+      query.race_id = race_id;
+    }
     // Fetch the results based on query
     const results = await RaceResult.find(query);
 
@@ -107,21 +114,39 @@ app.get('/api/raceResults', async (req, res) => {
 
 
 // Fetch race information
+// Fetch race information
 app.get('/api/raceInfo', async (req, res) => {
-  const { name, city, state } = req.query;
+  const { name, city, state, id } = req.query;
   try {
     const query = {};
+
+    // Ensure that 'id' is a valid ObjectId
+    if (id) {
+      // Use mongoose.Types.ObjectId to convert the id into an ObjectId
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ error: 'Invalid ObjectId format' });
+      }
+      query._id = new mongoose.Types.ObjectId(id);  // Convert id into ObjectId
+    }
     if (name) query.Name = { $regex: name, $options: 'i' };
     if (city) query.City = { $regex: city, $options: 'i' };
     if (state) query.State = { $regex: state, $options: 'i' };
 
     const results = await RaceInfo.find(query);
-    res.json(results);
+
+    // Check if results are found
+    if (results.length === 0) {
+      return res.status(404).json({ error: 'No races found with the provided query' });
+    }
+
+    res.json(results); // Return the found data
   } catch (err) {
     console.error('Error fetching race info:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+
 
 // Fetch athlete information
 app.get('/api/athleteInfo', async (req, res) => {

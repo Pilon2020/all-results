@@ -24,7 +24,7 @@ function App() {
         <Route path="/race/:id" element={<Race />} />
         <Route path="/athlete/:id" element={<Athlete />} />
         <Route path="/more-results" element={<MoreResults />} />
-        <Route path="/analysis/:id" element={<Analysis />} />
+        <Route path="/analysis/:id1/:id2" element={<Analysis />} />
       </Routes>
     </div>
   );

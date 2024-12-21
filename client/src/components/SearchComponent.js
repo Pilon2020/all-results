@@ -1,14 +1,12 @@
-import React, { useEffect, useState, useRef } from 'react';
+// SearchComponent.js
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './header.css';
 
-function Header() {
+function SearchComponent({ searchQuery, setSearchQuery }) {
   const [raceInfo, setRaceInfo] = useState([]);
   const [raceResults, setRaceResults] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const navigate = useNavigate();
-  const inputRef = useRef(null); // Create a reference for the input element
 
   useEffect(() => {
     const fetchRaceInfo = async () => {
@@ -52,10 +50,6 @@ function Header() {
     fetchRaceInfo();
     fetchRaceResults();
   }, [searchQuery]);
-
-  const handleSearchChange = (event) => {
-    setSearchQuery(event.target.value);
-  };
 
   const combinedResults = [
     ...raceInfo.map(info => ({
@@ -109,8 +103,6 @@ function Header() {
         const selectedResult = topResults[highlightedIndex];
         navigate(`/${selectedResult.type}/${selectedResult._id}`);
       }
-      setSearchQuery(''); // Clear the search query
-      inputRef.current?.blur(); // Remove focus from the search bar
     }
   };
 
@@ -119,34 +111,27 @@ function Header() {
   };
 
   return (
-    <header className="header" onKeyDown={handleKeyDown} tabIndex="0">
-      <div className="header-content">
-        <a href="/" className="headerlink"><h1>ALL RESULTS</h1></a>
-        <div className="search-container-h">
-          <input
-            ref={inputRef} // Attach the reference to the input element
-            type="text"
-            value={searchQuery}
-            onChange={handleSearchChange}
-            placeholder="Search by race name or athlete"
-            className={`search-bar-h ${searchQuery.trim() ? 'has-input' : ''} ${
-              raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''
-            }`}
-          />
-        </div>
-      </div>
-
+    <div className="search-container" onKeyDown={handleKeyDown} tabIndex="0">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search by race name or athlete"
+        className={`search-bar ${searchQuery.trim() ? 'has-input' : ''} ${
+          raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''
+        }`}
+      />
       {searchQuery && (
-        <div className={`results-container-h ${topResults.length > 0 ? 'results-visible' : ''}`}>
+        <div className={`results-container ${topResults.length > 0 ? 'results-visible' : ''}`}>
           {topResults.length > 0 ? (
-            <ul className="results-list-h">
+            <ul className="results-list">
               {topResults.map((result, index) => (
                 <li
                   key={result._id}
                   className={`result-item ${highlightedIndex === index ? 'highlighted' : ''}`}
                   onClick={() => navigate(`/${result.type}/${result._id}`)}
-                  >
-                  <a href={`/${result.type}/${result._id}`} className="result-link" style={{color:'white'}}>
+                >
+                  <Link to={`/${result.type}/${result._id}`} className="result-link">
                     <strong>{result.name}</strong>
                     {result.type === 'race' ? (
                       <>
@@ -155,16 +140,17 @@ function Header() {
                         <em>{result.location}</em>
                       </>
                     ) : null}
-                  </a>
+                  </Link>
                 </li>
               ))}
               {uniqueResults.length > 5 && (
                 <li
                   className={`result-item ${highlightedIndex === topResults.length ? 'highlighted' : ''}`}
-                  onClick={goToMoreResults}>
-                  <a href={`/more-results?query=${searchQuery}`} className="result-link more-results">
+                  onClick={goToMoreResults}
+                >
+                  <Link to={`/more-results?query=${searchQuery}`} className="result-link more-results">
                     <strong>More Results</strong>
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -173,8 +159,8 @@ function Header() {
           )}
         </div>
       )}
-    </header>
+    </div>
   );
 }
 
-export default Header;
+export default SearchComponent;
