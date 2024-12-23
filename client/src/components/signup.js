@@ -59,6 +59,8 @@ function SignUp() {
         const data = await response.json();
         if (data.isTaken) {
           setEmailError('Email is already in use');
+        } else {
+          setEmailError('');
         }
       } catch (err) {
         console.error('Error checking email:', err);
@@ -66,6 +68,7 @@ function SignUp() {
       }
     }
   };
+  
 
   const validatePassword = (password) => {
     const validations = {

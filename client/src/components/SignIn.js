@@ -13,17 +13,19 @@ function SignIn() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     try {
       const response = await fetch('http://localhost:5000/api/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-
+  
       const data = await response.json();
-
+      console.log('API response:', data); // Debug log
+  
       if (response.ok) {
+        console.log('Token:', data.token); // Log token
         localStorage.setItem('user', JSON.stringify(data.user));
         localStorage.setItem('token', data.token);
         navigate('/profile'); // Redirect to the profile page
@@ -34,7 +36,7 @@ function SignIn() {
       console.error('Error during sign-in:', err);
       setError('Error signing in. Please try again.');
     }
-  };
+  };  
 
   return (
     <div className="SignUpContainer">
