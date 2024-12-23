@@ -38,7 +38,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="profile-page">
+    <div>
       <h1>Profile</h1>
       <div>
         <strong>First Name:</strong> {profile.firstName}
