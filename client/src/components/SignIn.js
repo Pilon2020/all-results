@@ -39,6 +39,7 @@ function SignIn() {
   };  
 
   return (
+    <div className='content'>
     <div className="SignUpContainer">
       <div>
         <h2>Sign In</h2>
@@ -75,6 +76,7 @@ function SignIn() {
           </a>
         </p>
       </div>
+    </div>
     </div>
   );
 }

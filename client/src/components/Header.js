@@ -133,7 +133,9 @@ function Header() {
               raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''
             }`}
           />
+          <a href='/signin' className="SignIn">Sign In</a>
         </div>
+        
       </div>
 
       {searchQuery && (

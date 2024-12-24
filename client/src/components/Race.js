@@ -6,7 +6,7 @@ function Race() {
 
   // Fetch race details using the `id` if needed
   return (
-    <div>
+    <div className="content"> 
       <h2>Race Details</h2>
       <p>Race ID: {id}</p>
       {/* Add details based on fetched data */}

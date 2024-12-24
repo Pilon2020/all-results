@@ -2,28 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
 function Athlete() {
-  const { id } = useParams(); // Get the athlete ID from the URL
-  const [athlete, setAthlete] = useState(null); // Store the athlete's details
-  const [raceResults, setRaceResults] = useState([]); // Store the race results
-  const [loading, setLoading] = useState(true); // Loading state
-  const [error, setError] = useState(null); // Error state
+  const { id } = useParams();
+  const [athlete, setAthlete] = useState(null);
+  const [raceResults, setRaceResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchAthleteDetails = async () => {
       try {
-        // Log the athlete ID to check if it's correct
         console.log("Fetching athlete details for ID:", id);
 
-        // Fetch athlete details
         const response = await fetch(`http://localhost:5000/api/athleteInfo?_id=${id}`);
         if (response.ok) {
           const data = await response.json();
-          console.log("Received data:", data); // Log the data for debugging
+          console.log("Received data:", data);
 
-          // Find the athlete with the matching _id
           const foundAthlete = data.find(athlete => athlete._id.toString() === id);
           if (foundAthlete) {
-            setAthlete(foundAthlete); // Set the athlete data
+            setAthlete(foundAthlete);
           } else {
             setError("Athlete not found.");
           }
@@ -31,11 +28,10 @@ function Athlete() {
           setError("Failed to fetch athlete details.");
         }
 
-        // Fetch race results for mapping
         const raceResultsResponse = await fetch("http://localhost:5000/api/raceResults");
         if (raceResultsResponse.ok) {
           const raceResultsData = await raceResultsResponse.json();
-          setRaceResults(raceResultsData); // Set race results data
+          setRaceResults(raceResultsData);
         } else {
           setError("Failed to fetch race results.");
         }
@@ -51,30 +47,59 @@ function Athlete() {
     }
   }, [id]);
 
-  // Function to calculate age as of December 31st of the current year
   const calculateAge = (DOB) => {
-    const dobDate = new Date(DOB); // Convert dob to a Date object
-    const currentYear = new Date().getFullYear(); // Get the current year
-    const endOfYear = new Date(currentYear, 11, 31); // Set the date to December 31st of the current year
-    
-    // Calculate the age difference
+    const dobDate = new Date(DOB);
+    const currentYear = new Date().getFullYear();
+    const endOfYear = new Date(currentYear, 11, 31);
     let age = endOfYear.getFullYear() - dobDate.getFullYear();
-    
-    // Adjust age if birthday hasn't occurred yet this year
+
     const monthDifference = endOfYear.getMonth() - dobDate.getMonth();
     const dayDifference = endOfYear.getDate() - dobDate.getDate();
     if (monthDifference < 0 || (monthDifference === 0 && dayDifference < 0)) {
       age--;
     }
-    
     return age;
   };
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>{error}</div>;
 
-  // Map raceResults to find results matching the athlete's name
   const matchingResults = raceResults.filter(result => result.Name === athlete?.Name);
+
+  const groupedResults = matchingResults.reduce((acc, result) => {
+    const year = new Date(result.Date).getFullYear();
+    if (!acc[year]) {
+      acc[year] = {};
+    }
+    const distance = result.Distance || 'Unknown Distance';
+    if (!acc[year][distance]) {
+      acc[year][distance] = [];
+    }
+    acc[year][distance].push(result);
+    return acc;
+  }, {});
+
+  const mostRecentYear = Math.max(...Object.keys(groupedResults));
+
+  const seasonRecords = groupedResults[mostRecentYear] || {};
+  const allTimeRecords = {};
+  const yearlyPRs = {};
+
+  Object.keys(groupedResults).forEach(year => {
+    if (!yearlyPRs[year]) yearlyPRs[year] = {};
+
+    Object.keys(groupedResults[year]).forEach(distance => {
+        const bestTime = groupedResults[year][distance].reduce((best, current) => 
+          !best || current.Total < best.Total ? current : best
+        , null);
+
+        yearlyPRs[year][distance] = bestTime;
+
+      if (!allTimeRecords[distance] || bestTime.Total < allTimeRecords[distance].Total) {
+        allTimeRecords[distance] = { ...bestTime, year };
+      }
+    });
+  });
 
   return (
     <div className='content'>
@@ -82,46 +107,91 @@ function Athlete() {
         <div className='body'>
           <h1>{athlete.Name}</h1>
           <p>Hometown: {athlete.City} {athlete.State}, {athlete.Country}</p>
-          <p>Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}</p> {/* Display calculated age */}
+          <p>Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}</p>
 
-            <div className="athlete-container">
-              <div className="athlete-main">
+          <div className="athlete-container">
+            <div className="athlete-main">
               <h2 style={{paddingLeft:'10px'}}>Race Results:</h2>
-                {matchingResults.length > 0 ? (
-                  <ul className="race-list">
-                  {matchingResults.map((result, index) => (
-                    <a href={`/analysis/${result.Race_id}/${athlete._id}`} key={index}>
-                      <li className="race-item">
-                        <div className="race-header">
-                          <h2 className="race-title">{result.Race}</h2>
-                          <div className="race-details">
-                            <span className="race-date">{result.Date}</span>
-                            <span className="race-location">{result.Location}</span>
-                          </div>
-                        </div>
-                        <div className="race-body">
-                          <div className="race-info">
-                            <span className="race-age-group">{result.AgeGroup}</span>
-                          </div>
-                          <div className="race-time">
-                            <span className="bold-time">{result.Total}</span>
-                          </div>
-                        </div>
-                      </li>
-                    </a>
+              {Object.keys(groupedResults).sort((a, b) => b - a).map(year => (
+                <div key={year} style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '10px' }}>
+                  <h2>{year}</h2>
+                  {Object.keys(groupedResults[year]).sort().map(distance => (
+                    <div key={distance} style={{marginTop: '10px' }}>
+                      <h3 style={{ color: '#555' }}>{distance}</h3>
+                      <ul className="race-list">
+                        {groupedResults[year][distance].map((result, index) => (
+                          <a href={`/analysis/${result.Race_id}/${athlete._id}`} key={index}>
+                            <li className="race-item" style={{ marginBottom: '10px', listStyle: 'none' }}>
+                              <div className="race-header">
+                                <h2 className="race-title" style={{ margin: '5px 0' }}>{result.Race}</h2>
+                                <div className="race-details" style={{ fontSize: '14px', color: '#666' }}>
+                                  <span className="race-date">{result.Date}</span>
+                                  <span className="race-location" style={{ marginLeft: '10px' }}>{result.Location}</span>
+                                </div>
+                              </div>
+                            </li>
+                          </a>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>                
-                ) : (
-                  <p>No race results found.</p>
-                )}
-              </div>
-              <div className="athlete-sidebar">
-                <h2>Stats:</h2>
-                <div className='athletestats'>
-                <p>More stats to be added here</p>
                 </div>
+              ))}
+            </div>
+            <div className="athlete-sidebar">
+              <h2>Stats:</h2>
+              <div className='athletestats'>
+                <h3>Current Season - {mostRecentYear} </h3> 
+                {Object.keys(seasonRecords).map(distance => (
+                  <p key={distance}><b>{distance}:</b> {seasonRecords[distance][0].Total}</p>
+                ))}
+
+              <br />
+              <h3>Season Records</h3>
+              {Object.keys(allTimeRecords)
+                .sort() // Sort distances alphabetically
+                .map(distance => {
+                  // Gather all years for the current distance and sort by descending year
+                  const distanceYears = Object.keys(yearlyPRs)
+                    .filter(year => yearlyPRs[year][distance]) // Only include years with results for this distance
+                    .sort((a, b) => b - a); // Sort by descending year
+
+                  return (
+                    <div key={distance} style={{ marginBottom: '10px' }}>
+                      {/* Distance Header */}
+                      <p>
+                        <b>{distance}:</b>
+                      </p>
+
+                      {/* Yearly Best Performances */}
+                      {distanceYears.map(year => {
+                        const yearlyBest = yearlyPRs[year][distance];
+                        if (!yearlyBest) return null; // Skip if no result for this distance in the year
+
+                        // Check if this year's time matches the overall PR
+                        const isPR = yearlyBest.Total === allTimeRecords[distance].Total;
+
+                        return (
+                          <p
+                            key={`${distance}-${year}`}
+                            style={{
+                              marginLeft: '15px',
+                              fontWeight: isPR ? 'bold' : 'normal',
+                              color: isPR ? '#007BFF' : 'inherit',
+                            }}
+                          >
+                            {year}: {yearlyBest.Total}
+                            {isPR && <span style={{ marginLeft: '5px' }}>PR</span>}
+                          </p>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
               </div>
             </div>
+          </div>
         </div>
       ) : (
         <p>No athlete data found</p>

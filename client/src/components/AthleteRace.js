@@ -77,7 +77,7 @@ const RaceInfo = () => {
   
 
   return (
-    <div style={{padding:'10px'}}>
+    <div style={{padding:'10px'}} className='content'>
       {raceInfo.length === 0 ? (
         <div>No race info found for this ID.</div>
       ) : (
