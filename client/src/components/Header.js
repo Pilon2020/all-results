@@ -7,8 +7,34 @@ function Header() {
   const [raceResults, setRaceResults] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [user, setUser] = useState(null); // State to store user data
   const navigate = useNavigate();
-  const inputRef = useRef(null); // Create a reference for the input element
+  const inputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const response = await fetch('http://localhost:5000/api/auth/user', {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData); // Save user data to state
+          } else {
+            console.error('Failed to fetch user data');
+            localStorage.removeItem('token'); // Clear invalid token
+          }
+        } catch (error) {
+          console.error('Error fetching user:', error);
+        }
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const fetchRaceInfo = async () => {
@@ -119,25 +145,30 @@ function Header() {
   };
 
   return (
-    <header className="header" onKeyDown={handleKeyDown} tabIndex="0">
+    <header className="header">
       <div className="header-content">
         <a href="/" className="headerlink"><h1>ALL RESULTS</h1></a>
         <div className="search-container-h">
           <input
-            ref={inputRef} // Attach the reference to the input element
+            ref={inputRef}
             type="text"
             value={searchQuery}
-            onChange={handleSearchChange}
+            onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search by race name or athlete"
-            className={`search-bar-h ${searchQuery.trim() ? 'has-input' : ''} ${
-              raceInfo.length > 0 || raceResults.length > 0 ? 'results-visible' : ''
-            }`}
+            className={`search-bar-h ${searchQuery.trim() ? 'has-input' : ''}`}
           />
-          <a href='/signin' className="SignIn">Sign In</a>
+          {user ? (
+            <div className="user-info">
+              <span>Welcome, {user.name}!</span>
+              <button onClick={() => { localStorage.removeItem('token'); setUser(null); }}>
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <Link to="/signin" className="SignIn">Sign In</Link>
+          )}
         </div>
-        
       </div>
-
       {searchQuery && (
         <div className={`results-container-h ${topResults.length > 0 ? 'results-visible' : ''}`}>
           {topResults.length > 0 ? (

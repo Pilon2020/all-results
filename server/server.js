@@ -277,12 +277,35 @@ app.post('/api/signin', async (req, res) => {
       { expiresIn: '1h' }
     );
 
-    res.status(200).json({ message: 'Login successful', token, user: { id: user._id, email: user.email } });
+    res.status(200).json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user._id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    });
   } catch (err) {
     console.error('Error during sign-in:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+app.post('/api/refresh-token', authenticateToken, (req, res) => {
+  const { userId, email } = req.user;
+
+  const newToken = jwt.sign({ userId, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
+
+  res.status(200).json({ token: newToken });
+});
+
+app.get('/api/auth/user', authenticateToken, (req, res) => {
+  const user = req.user; // Decoded from token
+  res.json({ name: user.name, email: user.email });
+});
+
 
 // Profile route
 app.get('/api/profile', authenticateToken, async (req, res) => {

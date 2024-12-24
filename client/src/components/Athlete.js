@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 
 function Athlete() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [athlete, setAthlete] = useState(null);
   const [raceResults, setRaceResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isSignedIn, setIsSignedIn] = useState(false); // Assume signed-in state is fetched elsewhere
 
   useEffect(() => {
     const fetchAthleteDetails = async () => {
@@ -46,6 +48,32 @@ function Athlete() {
       fetchAthleteDetails();
     }
   }, [id]);
+
+  const handleClaimAthlete = async () => {
+    if (!isSignedIn) {
+      navigate("/sign-in");
+      return;
+    }
+
+    try {
+      const response = await fetch(`http://localhost:5000/api/claimAthlete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ athleteId: id }),
+      });
+
+      if (response.ok) {
+        alert("Athlete successfully claimed!");
+      } else {
+        alert("Failed to claim athlete.");
+      }
+    } catch (err) {
+      console.error("Error claiming athlete:", err);
+      alert("Error claiming athlete.");
+    }
+  };
 
   const calculateAge = (DOB) => {
     const dobDate = new Date(DOB);
@@ -105,7 +133,19 @@ function Athlete() {
     <div className='content'>
       {athlete ? (
         <div className='body'>
-          <h1>{athlete.Name}</h1>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <h1>{athlete.Name}</h1>
+            <button onClick={handleClaimAthlete} style={{
+              padding: '10px 20px',
+              backgroundColor: '#007BFF',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '5px',
+              cursor: 'pointer'
+            }}>
+              {isSignedIn ? "Claim Athlete" : "Sign in to Claim"}
+            </button>
+          </div>
           <p>Hometown: {athlete.City} {athlete.State}, {athlete.Country}</p>
           <p>Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}</p>
 
