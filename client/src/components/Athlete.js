@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import RaceResults from './RaceResults';
+import AthleteAnalysis from './athleteAnalysis';
+import AthleteStats from './athleteStats';
+import AthleteCompare from './athleteCompare';
 
 function Athlete() {
   const { id } = useParams();
@@ -8,7 +12,8 @@ function Athlete() {
   const [raceResults, setRaceResults] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isSignedIn, setIsSignedIn] = useState(false); // Assume signed-in state is fetched elsewhere
+  const [activeTab, setActiveTab] = useState('raceResults'); 
+  const [showAllYears, setShowAllYears] = useState(false);
 
   useEffect(() => {
     const fetchAthleteDetails = async () => {
@@ -49,32 +54,6 @@ function Athlete() {
     }
   }, [id]);
 
-  const handleClaimAthlete = async () => {
-    if (!isSignedIn) {
-      navigate("/sign-in");
-      return;
-    }
-
-    try {
-      const response = await fetch(`http://localhost:5000/api/claimAthlete`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ athleteId: id }),
-      });
-
-      if (response.ok) {
-        alert("Athlete successfully claimed!");
-      } else {
-        alert("Failed to claim athlete.");
-      }
-    } catch (err) {
-      console.error("Error claiming athlete:", err);
-      alert("Error claiming athlete.");
-    }
-  };
-
   const calculateAge = (DOB) => {
     const dobDate = new Date(DOB);
     const currentYear = new Date().getFullYear();
@@ -94,40 +73,47 @@ function Athlete() {
 
   const matchingResults = raceResults.filter(result => result.Name === athlete?.Name);
 
-  const groupedResults = matchingResults.reduce((acc, result) => {
-    const year = new Date(result.Date).getFullYear();
-    if (!acc[year]) {
-      acc[year] = {};
+  // Group results by year and calculate records
+const groupedResults = matchingResults.reduce((acc, result) => {
+  const year = new Date(result.Date).getFullYear();
+  if (!acc[year]) acc[year] = {};
+  const distance = result.Distance || 'Unknown Distance';
+  if (!acc[year][distance]) acc[year][distance] = [];
+  acc[year][distance].push(result);
+  return acc;
+}, {});
+
+// Initialize records
+const allTimeRecords = {};
+const yearlyPRs = {};
+
+// Calculate records
+Object.keys(groupedResults).forEach(year => {
+  if (!yearlyPRs[year]) yearlyPRs[year] = {};
+
+  Object.keys(groupedResults[year]).forEach(distance => {
+    const bestTime = groupedResults[year][distance].reduce(
+      (best, current) => (!best || current.Total < best.Total ? current : best),
+      null
+    );
+
+    yearlyPRs[year][distance] = bestTime;
+
+    if (!allTimeRecords[distance] || bestTime.Total < allTimeRecords[distance].Total) {
+      allTimeRecords[distance] = { ...bestTime, year };
     }
-    const distance = result.Distance || 'Unknown Distance';
-    if (!acc[year][distance]) {
-      acc[year][distance] = [];
-    }
-    acc[year][distance].push(result);
-    return acc;
-  }, {});
-
-  const mostRecentYear = Math.max(...Object.keys(groupedResults));
-
-  const seasonRecords = groupedResults[mostRecentYear] || {};
-  const allTimeRecords = {};
-  const yearlyPRs = {};
-
-  Object.keys(groupedResults).forEach(year => {
-    if (!yearlyPRs[year]) yearlyPRs[year] = {};
-
-    Object.keys(groupedResults[year]).forEach(distance => {
-        const bestTime = groupedResults[year][distance].reduce((best, current) => 
-          !best || current.Total < best.Total ? current : best
-        , null);
-
-        yearlyPRs[year][distance] = bestTime;
-
-      if (!allTimeRecords[distance] || bestTime.Total < allTimeRecords[distance].Total) {
-        allTimeRecords[distance] = { ...bestTime, year };
-      }
-    });
   });
+});
+
+  
+  const mostRecentYear = Math.max(...Object.keys(groupedResults));
+  const seasonRecords = groupedResults[mostRecentYear] || {};
+  const tabTitles = {
+    raceResults: "Race Results",
+    athleteAnalysis: "Analysis",
+    athleteStats: "Stats",
+    athleteCompare: "Compare",
+  };
 
   return (
     <div className='content'>
@@ -135,51 +121,87 @@ function Athlete() {
         <div className='body'>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <h1>{athlete.Name}</h1>
-            <button onClick={handleClaimAthlete} style={{
-              padding: '10px 20px',
-              backgroundColor: '#007BFF',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: 'pointer'
-            }}>
-              {isSignedIn ? "Claim Athlete" : "Sign in to Claim"}
-            </button>
           </div>
-          <p>Hometown: {athlete.City} {athlete.State}, {athlete.Country}</p>
-          <p>Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}</p>
-
+          <div className="athlete-info" style={{ display: 'flex', alignItems: 'center' }}>
+            <p style={{ marginRight: '20vw' }}>
+              Hometown: {athlete.City} {athlete.State}, {athlete.Country}
+            </p>
+            <p>
+              Age: {athlete.DOB ? calculateAge(athlete.DOB) : 'N/A'}
+            </p>
+          </div>
           <div className="athlete-container">
-            <div className="athlete-main">
-              <h2 style={{paddingLeft:'10px'}}>Race Results:</h2>
-              {Object.keys(groupedResults).sort((a, b) => b - a).map(year => (
-                <div key={year} style={{ marginBottom: '30px', padding: '20px', border: '1px solid #ccc', borderRadius: '10px' }}>
-                  <h2>{year}</h2>
-                  {Object.keys(groupedResults[year]).sort().map(distance => (
-                    <div key={distance} style={{marginTop: '10px' }}>
-                      <h3 style={{ color: '#555' }}>{distance}</h3>
-                      <ul className="race-list">
-                        {groupedResults[year][distance].map((result, index) => (
-                          <a href={`/analysis/${result.Race_id}/${athlete._id}`} key={index}>
-                            <li className="race-item" style={{ marginBottom: '10px', listStyle: 'none' }}>
-                              <div className="race-header">
-                                <h2 className="race-title" style={{ margin: '5px 0' }}>{result.Race}</h2>
-                                <div className="race-details" style={{ fontSize: '14px', color: '#666' }}>
-                                  <span className="race-date">{result.Date}</span>
-                                  <span className="race-location" style={{ marginLeft: '10px' }}>{result.Location}</span>
-                                </div>
-                              </div>
-                            </li>
-                          </a>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              ))}
+          <div className="athlete-main">
+          <div className="tabs" style={{ display: 'flex', justifyContent: 'space-evenly' }}>
+            {Object.keys(tabTitles).map(tab => (
+              <h2
+                key={tab}
+                className={`tab-button ${activeTab === tab ? 'active' : ''}`}
+                onClick={() => { setActiveTab(tab); setShowAllYears(false); }}
+                style={{
+                  paddingLeft: '10px',
+                  paddingRight: '10px',
+                  backgroundColor: activeTab === tab ? 'white' : 'gray',
+                  transition: 'background-color 0.3s ease',
+                  cursor: 'pointer',
+                  textAlign: 'center',
+                  flex: 1,
+                  borderRadius: '10px 10px 0px 0px',
+                  border: '3px solid #ccc',
+                  borderBottom: 'none',
+                }}
+              >
+                {tabTitles[tab]}
+              </h2>
+            ))}
+          </div>
+              <div className="tab-content">
+                {activeTab === 'raceResults' && (
+                  <RaceResults
+                    athlete={athlete}
+                    groupedResults={groupedResults}
+                    yearlyPRs={yearlyPRs}
+                    allTimeRecords={allTimeRecords}
+                    showAllYears={showAllYears}
+                    setShowAllYears={setShowAllYears} // Pass this as a prop
+                  />
+                )}
+                {activeTab === 'athleteAnalysis' && (
+                  <AthleteAnalysis 
+                  athlete={athlete}
+                  groupedResults={groupedResults}
+                  yearlyPRs={yearlyPRs}
+                  allTimeRecords={allTimeRecords}
+                  showAllYears={showAllYears}
+                  setShowAllYears={setShowAllYears} // Pass this as a prop
+                />
+                )}
+                {activeTab === 'athleteStats' && (
+                  <AthleteStats 
+                  athlete={athlete}
+                  groupedResults={groupedResults}
+                  yearlyPRs={yearlyPRs}
+                  allTimeRecords={allTimeRecords}
+                  showAllYears={showAllYears}
+                  setShowAllYears={setShowAllYears} // Pass this as a prop
+                />
+                )}
+                {activeTab === 'athleteCompare' && (
+                  <AthleteCompare 
+                  athlete={athlete}
+                  groupedResults={groupedResults}
+                  yearlyPRs={yearlyPRs}
+                  allTimeRecords={allTimeRecords}
+                  showAllYears={showAllYears}
+                  setShowAllYears={setShowAllYears} // Pass this as a prop
+                />
+                )}
+              </div>
             </div>
+            
+            
             <div className="athlete-sidebar">
-              <h2>Stats:</h2>
+              <h2>Records:</h2>
               <div className='athletestats'>
                 <h3>Current Season - {mostRecentYear} </h3> 
                 {Object.keys(seasonRecords).map(distance => (
@@ -187,7 +209,7 @@ function Athlete() {
                 ))}
 
               <br />
-              <h3>Season Records</h3>
+              <h3>Lifetime</h3>
               {Object.keys(allTimeRecords)
                 .sort() // Sort distances alphabetically
                 .map(distance => {

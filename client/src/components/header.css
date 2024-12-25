@@ -53,6 +53,7 @@
 
 .search-bar-h.has-input {
   border-bottom: 3px solid #888888; 
+  border-radius: 10px 10px 0px 0px;
 }
 
 /* SignIn button */
@@ -77,10 +78,10 @@ a.SignIn {
   transform: translateY(-20px); /* Start position above */
   transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
   display: none; /* Hidden by default */
-  position: absolute; /* Position relative to the search container */
-  top: 75%; /* Below the search bar */
-  right: 4.55%;
-  width: 30vw; /* Matches the parent search container */
+  position: inherit; /* Position relative to the search container */
+  top: 6.1%; /* Below the search bar */
+  right: 5.05%;
+  width: 29.55vw; /* Matches the parent search container */
   z-index: 1500; /* Ensure it overlays the header background */
 }
 
