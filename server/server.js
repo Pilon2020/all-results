@@ -41,7 +41,7 @@ const raceResultSchema = new mongoose.Schema({
   _id: String,
   race_id: String,
   Name: String,
-  athlete_id: String,
+  Athlete_id: String,
   Gender: String,
   Race: String,
   Date: String,
@@ -93,7 +93,7 @@ const User = mongoose.model('User', userSchema, 'users');
 
 // Fetch race results
 app.get('/api/raceResults', async (req, res) => {
-  const { id, name, athlete_id, race_id } = req.query;
+  const { id, name, Athlete_id, race_id } = req.query;
 
   try {
     let query = {};
@@ -104,8 +104,8 @@ app.get('/api/raceResults', async (req, res) => {
     if (name) {
       query.Name = { $regex: name, $options: 'i' }; // Case-insensitive name search
     }
-    if (athlete_id) {
-      query.athlete_id = athlete_id;
+    if (Athlete_id) {
+      query.Athlete_id = Athlete_id;
     }
     if (race_id) {
       query.race_id = race_id;

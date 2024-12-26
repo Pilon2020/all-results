@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams} from 'react-router-dom';
 import RaceResults from './RaceResults';
 import AthleteAnalysis from './athleteAnalysis';
 import AthleteStats from './athleteStats';
@@ -7,7 +7,6 @@ import AthleteCompare from './athleteCompare';
 
 function Athlete() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [athlete, setAthlete] = useState(null);
   const [raceResults, setRaceResults] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +22,7 @@ function Athlete() {
         const response = await fetch(`http://localhost:5000/api/athleteInfo?_id=${id}`);
         if (response.ok) {
           const data = await response.json();
-          console.log("Received data:", data);
+          console.log("Received data:", data)
 
           const foundAthlete = data.find(athlete => athlete._id.toString() === id);
           if (foundAthlete) {

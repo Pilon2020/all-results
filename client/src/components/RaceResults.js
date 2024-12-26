@@ -37,11 +37,12 @@ function RaceResults({ athlete, groupedResults, yearlyPRs, allTimeRecords, showA
     key={year}
     style={{
       marginBottom: '30px',
-      padding: '20px',
+      padding: '10px',
       border: index === 0 ? '3px solid #ccc' : '3px solid #ccc', // Different border for the first year
-      borderTop: 'none',
-      borderRadius: index === 0 ? '0px 0px 10px 10px' : '10px', // Rounded corners for the topmost year
-      }}
+      borderTop: index === 0 ? 'none' : '3px solid #ccc',
+      borderRadius: index === 0 ? '0px 0px 10px 10px' : '10px', // Rounded corners for the topmost year  
+    }}
+    className='body'
   >
     <h2>{year}</h2>
     {Object.keys(groupedResults[year])
