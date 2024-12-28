@@ -104,7 +104,6 @@ Object.keys(groupedResults).forEach(year => {
   });
 });
 
-  
   const mostRecentYear = Math.max(...Object.keys(groupedResults));
   const seasonRecords = groupedResults[mostRecentYear] || {};
   const tabTitles = {
@@ -170,9 +169,6 @@ Object.keys(groupedResults).forEach(year => {
                   athlete={athlete}
                   groupedResults={groupedResults}
                   yearlyPRs={yearlyPRs}
-                  allTimeRecords={allTimeRecords}
-                  showAllYears={showAllYears}
-                  setShowAllYears={setShowAllYears} // Pass this as a prop
                 />
                 )}
                 {activeTab === 'athleteStats' && (
