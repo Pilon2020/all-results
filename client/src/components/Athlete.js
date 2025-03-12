@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import RaceResults from './RaceResults';
 import AthleteAnalysis from './athleteAnalysis';
 import AthleteStats from './athleteStats';
 import AthleteCompare from './athleteCompare';
-import './athlete.css';
 
 function Athlete() {
   const { id } = useParams();
@@ -63,6 +62,12 @@ function Athlete() {
       age--;
     }
     return age;
+  };
+
+  // Handler to switch to race results tab and show specific year
+  const handleViewRaceResult = (year) => {
+    setActiveTab('raceResults');
+    setShowAllYears(true); // Ensure all years are visible to show the selected year
   };
 
   if (loading) return (
@@ -198,12 +203,25 @@ function Athlete() {
                 <div className="record-section">
                   <h3>Current Season - {mostRecentYear}</h3>
                   {Object.keys(seasonRecords).length > 0 ? (
-                    Object.keys(seasonRecords).map(distance => (
-                      <div key={distance} className="record-item">
-                        <span className="distance">{distance}:</span>
-                        <span className="time">{seasonRecords[distance][0].Total}</span>
-                      </div>
-                    ))
+                    Object.keys(seasonRecords).map(distance => {
+                      const bestResult = seasonRecords[distance].reduce(
+                        (best, current) => (!best || current.Total < best.Total ? current : best),
+                        null
+                      );
+                      
+                      return (
+                        <Link 
+                          to={`/analysis/${bestResult.Race_id}/${athlete._id}`} 
+                          key={`current-${distance}`} 
+                          style={{textDecoration: "none"}}
+                        >
+                          <div className="record-item clickable" onClick={() => handleViewRaceResult(mostRecentYear)}>
+                            <span className="distance">{distance}:</span>
+                            <span className="time">{bestResult.Total}</span>
+                          </div>
+                        </Link>
+                      );
+                    })
                   ) : (
                     <p className="no-records">No records for current season</p>
                   )}
@@ -223,20 +241,24 @@ function Athlete() {
                           <div key={distance} className="lifetime-record">
                             <div className="distance-header">{distance}</div>
                             <div className="year-records">
-                              {distanceYears.map(year => {
+                              {distanceYears.map((year) => {
                                 const yearlyBest = yearlyPRs[year][distance];
                                 if (!yearlyBest) return null;
                                 const isPR = yearlyBest.Total === allTimeRecords[distance].Total;
 
                                 return (
-                                  <div 
-                                    key={`${distance}-${year}`}
-                                    className={`year-record ${isPR ? 'is-pr' : ''}`}
-                                  >
-                                    <span className="year">{year}:</span>
-                                    <span className="time">{yearlyBest.Total}</span>
-                                    {isPR && <span className="pr-badge">PR</span>}
-                                  </div>
+                                  <Link to={`/analysis/${yearlyBest.Race_id}/${athlete._id}`} key={`${distance}-${year}`} style={{textDecoration: "none"}}>
+                                    <div 
+                                      className={`year-record ${isPR ? 'is-pr' : ''} clickable`}
+                                      onClick={() => handleViewRaceResult(year)}
+                                    >
+                                      <div className="record-row">
+                                        <span className="year">{year}:</span>
+                                        {isPR && <span className="pr-badge">PR</span>}
+                                        <span className="time">{yearlyBest.Total}</span>
+                                      </div>
+                                    </div>
+                                  </Link>
                                 );
                               })}
                             </div>

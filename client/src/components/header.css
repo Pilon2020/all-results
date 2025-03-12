@@ -1,17 +1,22 @@
-/* Main header container */
+/* Header Styles - aligned with app.css */
+
 .header {
+  height: var(--header-height);
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  background-color: #f8f8f8;
-  position: fixed; /* Keeps the header fixed at the top */
+  padding: 0 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  position: fixed;
   top: 0;
   right: 0;
-  z-index: 10; /* Places the header above other content */
-  width: 100vw;
-  display: flex;
+  z-index: 10;
+  width: 100%;
   max-height: 15vh;
 }
 
-/* Header content */
 .header-content {
   display: flex;
   align-items: center;
@@ -22,93 +27,107 @@
 .headerlink {
   text-decoration: none;
   padding-left: 30px;
+  color: var(--text-color);
 }
 
 .headerlink:visited {
-  color: #000000;
+  color: var(--text-color);
 }
 
 /* Search container */
 .search-container-h {
   display: flex;
   align-items: center;
-  width: 35vw; /* Increased width to fit both search bar and button */
+  width: 35vw;
   position: relative;
   padding-right: 10px;
 }
 
 /* Search input styles */
-.search-bar-h, .results-container-h {
+.search-bar-h, 
+.results-container-h {
   width: 30vw;
   float: right;
-  border-radius: 10px;
+  border-radius: var(--border-radius);
   padding: 10px;
   font-size: 16px;
   border: none;
   outline: none;
-  background-color: rgb(206, 206, 206);
+  background-color: var(--search-bg);
   z-index: 10;
   display: block;
 }
 
+.search-bar-h input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  box-sizing: border-box;
+  outline: none;
+  background-color: transparent;
+}
+
+.search-bar-h input:focus,
+.search-bar-h input:focus-visible {
+  outline: none;
+  background-color: var(--search-bg);
+}
+
 .search-bar-h.has-input {
-  border-bottom: 3px solid #888888; 
-  border-radius: 10px 10px 0px 0px;
+  border-bottom: 3px solid var(--dark-gray);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 
 /* SignIn button */
 a.SignIn {
-  margin-left: 10px;  /* Adds space between search bar and button */
-  background-color: black;
-  border-radius: 10px;
+  margin-left: 10px;
+  background-color: var(--primary-color);
+  border-radius: var(--border-radius);
   height: auto;
   padding: 10px 20px;
-  color: white;
+  color: var(--white);
   text-decoration: none;
-  white-space: nowrap; /* Ensures text doesn't wrap */
+  white-space: nowrap;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+a.SignIn:hover {
+  background-color: var(--primary-hover);
+  text-decoration: none;
 }
 
 /* Results container */
 .results-container-h {
-  max-height: auto;
+  max-height: 400px;
   overflow-y: auto;
-  background-color: rgb(206, 206, 206); /* Background applies only to this container */
-  border-radius: 10px;
+  background-color: var(--search-bg);
+  border-radius: var(--border-radius);
   opacity: 0;
-  transform: translateY(-20px); /* Start position above */
-  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
-  display: none; /* Hidden by default */
-  position: inherit; /* Position relative to the search container */
-  top: 6.1%; /* Below the search bar */
+  transform: translateY(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  display: none;
+  position: inherit;
+  top: 6.1%;
   right: 5.05%;
-  width: 29.55vw; /* Matches the parent search container */
-  z-index: 1500; /* Ensure it overlays the header background */
+  width: 29.55vw;
+  z-index: 1500;
+  margin-top: 5px;
 }
 
-/* Make the results visible with the animation */
-.results-container.results-visible {
+/* Make the results visible with animation */
+.results-container-h.results-visible {
   opacity: 1;
-  transform: translateY(0); /* Final position */
+  transform: translateY(0);
   display: block;
+  border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 
 /* Adjust for when results are visible */
-.results-container-h.results-visible {
-  opacity: 1;
-  transform: translateY(0); /* Final position */
-  display: block; /* Make it visible */
-  border-radius: 00px 00px 10px 10px; /* Remove bottom radius for the search bar */
-}
-
-/* Ensure header background does not interfere */
-.header:not(.results-visible) {
-  background-color: #f8f8f8; /* Ensure consistent header background */
-}
-
 .search-bar-h.results-visible {
-  border-radius: 10px 10px 0px 0px; /* Remove bottom radius for the search bar */
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
   position: relative;
-  z-index: 1000; /* Ensure this is higher than other elements */
+  z-index: 1000;
 }
 
 /* Results list and items */
@@ -116,56 +135,95 @@ a.SignIn {
   list-style-type: none;
   padding: 0;
   margin-top: 10px;
-  margin-bottom: 0px;
+  margin-bottom: 0;
 }
 
 .result-item-h {
-  background-color: #474747;
+  background-color: var(--result-bg);
+  padding: 10px;
   margin-bottom: 10px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease; /* Smooth hover transition */
-  transform: translateY(var(--results-offset))
+  border-radius: var(--border-radius);
+  transition: background-color 0.3s ease;
+  border-bottom: 1px solid var(--medium-gray);
 }
 
-/* Change the background color when hovering over the entire item */
-.result-item:hover {
-  background-color: #adadad; 
+.result-item-h:last-child {
+  border-bottom: none;
 }
 
-.result-item.highlighted {
-  background-color: #adadad;
+.result-item-h:hover,
+.result-item-h.highlighted {
+  background-color: var(--result-hover);
 }
 
-.result-item a {
-  text-decoration: none; /* Optional: remove underline from links */
-  color: white; /* Ensure the text is readable against the background */
-}
-
-.result-item:hover a {
-  color: white; /* Optional: change link color on hover if needed */
+.result-item-h a {
+  text-decoration: none;
+  color: var(--white);
+  display: block;
 }
 
 /* More athletes link */
-.more-athletes {
+.more-athletes-h {
   text-align: center;
   margin-top: 20px;
 }
 
-.more-athletes a {
-  color: #000000;
+.more-athletes-h a {
+  color: var(--text-color);
   text-decoration: none;
   font-weight: bold;
 }
 
-.more-athletes a:hover {
+.more-athletes-h a:hover {
   text-decoration: underline;
 }
 
-.no-results {
+.no-results-h {
   color: #d9534f;
   font-weight: bold;
+  padding: 10px;
 }
 
 .result-link {
-  color: white;
+  color: var(--white);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-container-h {
+    width: 60vw;
+  }
+  
+  .search-bar-h,
+  .results-container-h {
+    width: 50vw;
+  }
+  
+  .results-container-h {
+    width: 49.55vw;
+  }
+  
+  .headerlink {
+    padding-left: 10px;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-container-h {
+    width: 70vw;
+  }
+  
+  .search-bar-h,
+  .results-container-h {
+    width: 60vw;
+  }
+  
+  .results-container-h {
+    width: 59.55vw;
+  }
+  
+  a.SignIn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
 }

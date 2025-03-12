@@ -1,15 +1,148 @@
+/* app.css */
+:root {
+  --primary-color: #0056b3;
+  --primary-hover: #003d7a;
+  --accent-color: #ff6600;
+  --accent-color2: rgb(12, 71, 12);
+  --light-gray: #f5f7fa;
+  --medium-gray: #e1e5eb;
+  --dark-gray: #6c757d;
+  --border-color: #ddd;
+  --text-color: #333;
+  --white: #ffffff;
+  --success: #28a745;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --header-height: 60px;
+  --search-bg: rgb(206, 206, 206);
+  --result-bg: #474747;
+  --result-hover: #adadad;
+  --border-radius: 5px;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  color: var(--text-color);
+  background-color: var(--light-gray);
+  line-height: 1.5;
+  font-size: 14px;
+  display: flex;
+  flex-direction: column;
+}
+/* Add these styles to your app.css file */
+.record-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.year {
+  flex-shrink: 0;
+}
+
+.pr-badge {
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.time {
+  margin-left: auto; /* Pushes the time to the right */
+  text-align: right;
+}
+
+/* Add these styles to your app.css file in the Records Section */
+.record-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.year {
+  flex-shrink: 0;
+}
+
+.pr-badge {
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.sr-badge {
+  margin: 0 4px;
+  flex-shrink: 0;
+  background-color: var(--accent-color2);
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  margin-left: 5px;
+}
+
+.time {
+  margin-left: auto; /* Pushes the time to the right */
+  text-align: right;
+}
+
+/* Clickable record styles */
+.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable:hover {
+  background-color: var(--light-gray);
+  border-radius: 4px;
+}
+
+.clickable:active {
+  background-color: var(--medium-gray);
+}
+
+
+a {
+  text-decoration: none;
+  color: var(--primary-color);
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Header and Navigation */
+.Header {
+  height: var(--header-height);
+  background-color: var(--white);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  margin: 0;
+}
+
+.Header h1 {
+  font-size: 1.25rem;
+  margin: 0;
+  font-weight: 600;
+  flex-grow: 1;
+  text-align: center;
+}
+
 .SignInButton {
   background-color: #007bff;
-  color: white;
+  color: var(--white);
+  padding: 8px 16px;
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  font-weight: 500;
   border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
   cursor: pointer;
-  font-size: 1rem;
 }
 
 .SignInButton:hover {
-  background-color: #0056b3;
+  background-color: var(--primary-hover);
 }
 
 /* Sign Up Link */
@@ -22,113 +155,137 @@
   text-decoration: underline;
 }
 
-html, body {
-  margin: 0;
-  padding: 0;
-  height: 100%;
+/* Content Layout */
+.content {
+  max-width: 1140px;
+  margin: 20px auto;
+  padding: 0 15px;
   display: flex;
   flex-direction: column;
+  justify-content: left;
+  align-items: left;
+  width: 100%;
+  height: 100%;
+  margin-top: 5vh;
+  background-color: var(--light-gray);
+  padding: 50px 10px 10px;
+  box-sizing: border-box;
 }
 
+/* Search Functionality */
 .search-container {
   display: flex;
-  flex-direction: column; /* Stack elements vertically */
+  flex-direction: column;
   align-items: center;
-  margin-top: 20px;
-  position: relative; /* Enables positioning of child elements */
-  z-index: 1; /* Ensures the search bar is above other elements */
+  margin: 20px auto;
+  position: relative;
+  z-index: 1;
+  max-width: 600px;
 }
 
-/* Ensure both the search bar and results have the same width */
 .search-bar, .results-container {
   width: 50vw;
-  margin: 0 auto;  /* Center them horizontally */
+  margin: 0 auto;
   border-radius: 10px;
   padding: 10px;
   font-size: 16px;
   border: none;
   outline: none;
-  background-color: rgb(206, 206, 206);
+  background-color: var(--search-bg);
+}
+
+.search-bar input {
+  width: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  box-sizing: border-box;
+  outline: none;
+  background-color: transparent;
+}
+
+.search-bar input:focus,
+.search-bar input:focus-visible {
+  outline: none;
+  background-color: var(--search-bg);
+}
+
+.search-bar.has-input {
+  border-bottom: 3px solid #888888;
 }
 
 /* Animation for easing in the results */
 .results-container {
   text-align: left;
-  max-height: auto;
+  max-height: 400px;
   overflow-y: auto;
-  background-color: rgb(206, 206, 206);
+  background-color: var(--search-bg);
   border-radius: 30px;
   opacity: 0;
-  transform: translateY(-20px); /* Start position above */
-  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth transition */
+  transform: translateY(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  margin-top: 5px;
 }
 
-/* Make the results visible with the animation */
 .results-container.results-visible {
   opacity: 1;
-  transform: translateY(0); /* Final position */
-}
-
-/* Adjust for when results are visible */
-.results-container.results-visible {
-  border-radius: 0px 0px 10px 10px; /* Remove top radius for the results container */
+  transform: translateY(0);
+  border-radius: 0px 0px 10px 10px;
 }
 
 .search-bar.results-visible {
-  border-radius: 10px 10px 0px 0px; /* Remove bottom radius for the search bar */
+  border-radius: 10px 10px 0px 0px;
 }
-/* Results list and items */
-/* Results list and items */
+
 .results-list {
   list-style-type: none;
   padding: 0;
+  margin: 0;
 }
 
 .result-item {
-  background-color: #474747;
+  background-color: var(--result-bg);
   padding: 10px;
   margin-bottom: 10px;
   border-radius: 5px;
-  transition: background-color 0.3s ease; /* Smooth hover transition */
+  transition: background-color 0.3s ease;
+  border-bottom: 1px solid var(--medium-gray);
 }
 
-/* Change the background color when hovering over the entire item */
-.result-item:hover {
-  background-color: #adadad; /* Replace with your desired hover color */
+.result-item:last-child {
+  border-bottom: none;
 }
 
-.result-item.highlighted{
-  background-color: #adadad;
+.result-item:hover,
+.result-item.highlighted {
+  background-color: var(--result-hover);
 }
 
 .result-item a {
-  text-decoration: none; /* Optional: remove underline from links */
-  color: white; /* Ensure the text is readable against the background */
+  text-decoration: none;
+  color: var(--white);
+  display: block;
 }
 
-.result-item:hover a {
-  color: white; /* Optional: change link color on hover if needed */
+.no-results {
+  color: #d9534f;
+  font-weight: bold;
+  padding: 10px;
 }
 
-/* More athletes link */
+/* More athletes section */
 .more-athletes {
   text-align: center;
   margin-top: 20px;
 }
 
 .more-athletes a {
-  color: #000000;
+  color: var(--text-color);
   text-decoration: none;
   font-weight: bold;
 }
 
 .more-athletes a:hover {
   text-decoration: underline;
-}
-
-.no-results {
-  color: #d9534f;
-  font-weight: bold;
 }
 
 .more-athletes-page {
@@ -140,112 +297,234 @@ html, body {
   text-align: center;
 }
 
-.results-list li {
-  font-size: 18px;
-}
-
-.search-bar input {
-  width: 100%;
-  padding: 10px;
-  border-radius: 20px;
-  box-sizing: border-box;
-  outline: none; /* Removes the default outline */
-}
-
-.search-bar input:focus {
-  outline: none;  /* No outline */
-  border-color: #ccc;  /* Set the same border color as the normal state */
-}
-
-.search-bar input:focus-visible {
-  outline: none;  /* Ensure there's no outline on focus-visible */
-}
-
-.search-bar.has-input {
-  border-bottom: 3px solid #888888; /* Green bottom line when input is not empty */
-}
-
-/* Search bar input styles */
-input:focus {
-  outline:none;
-  background-color:rgb(206, 206, 206);
-}
-
-.Header {
-  display: flex;
-  justify-content: space-between; /* Space between the h1 and button */
-  align-items: center; /* Vertically center the items */
-  height: 10vh;
-  margin: 10px;
-}
-
-.Header h1 {
-  flex-grow: 1; /* Allows the h1 to take up available space */
-  text-align: center; /* Centers the h1 text */
-  margin: 0; /* Remove default margin from the h1 */
-}
-
-.SignInButton {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.SignInButton:hover {
-  background-color: #0056b3;
-}
-
 .More-results {
   color: aqua;
 }
 
-.body {
-  text-align: left  ;
-  max-width: 100%; /* Constrain text width for readability */
-  padding: 0px 10px 10px;
-  background: #ffffff;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+/* Athlete Profile */
+.athlete-container {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.full-results-list {
-  list-style-type: none;
+.athlete-profile {
+  background-color: var(--white);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--card-shadow);
+  margin-bottom: 20px;
+}
+
+.athlete-header {
+  padding: 15px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: #f8f9fa;
+}
+
+.athlete-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-color);
+}
+
+.athlete-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  font-size: 14px;
+}
+
+.info-label {
+  font-weight: 500;
+  color: var(--dark-gray);
+}
+
+.athlete-main {
+  flex: 3.5;
+  border-radius: 10px;
   padding: 0;
+  margin: 0;
 }
 
-.full-result-item {
-  background-color: #919191;
+.athlete-sidebar {
+  flex: 1;
+  border-left: 1px solid var(--border-color);
+  padding: 10px;
+  background-color: #f8f9fa;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .athlete-container {
+    flex-direction: column;
+  }
+  
+  .athlete-sidebar {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .year-record {
+    gap: 10px;
+  }
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid var(--border-color);
+  overflow-x: auto;
+}
+
+.tab-button {
+  padding: 10px 15px;
+  background-color: transparent;
+  font-weight: 500;
+  color: var(--dark-gray);
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-button:hover {
+  color: var(--primary-color);
+}
+
+.tab-button.active {
+  color: var(--primary-color);
+  border-bottom: 3px solid var(--primary-color);
+}
+
+.tab-content {
+  background-color: var(--white);
+  min-height: 300px;
   padding: 20px;
-  border: 1px solid #ccc;
-  border-radius: 20px;
-  margin-bottom: 10px;
 }
 
+/* Records Section */
+.records-card {
+  padding: 15px;
+}
+
+.records-card h2 {
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border-color);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.record-section {
+  margin-bottom: 25px;
+}
+
+.record-section h3 {
+  color: var(--text-color);
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.record-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.distance {
+  font-weight: 500;
+}
+
+.lifetime-record {
+  margin-bottom: 15px;
+}
+
+.distance-header {
+  font-weight: 600;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: var(--text-color);
+  padding: 2px 0;
+}
+
+.year-records {
+  margin-left: 10px;
+}
+
+.year-record {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  font-size: 13px;
+  padding: 3px 0;
+}
+
+.year {
+  min-width: 40px;
+  margin-right: 10px;
+  color: var(--dark-gray);
+}
+
+.time {
+  font-family: monospace;
+  font-weight: 500;
+}
+
+.is-pr {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.pr-badge {
+  background-color: var(--accent-color);
+  color: white;
+  font-size: 10px;
+  padding: 2px 4px;
+  border-radius: 2px;
+  margin-left: 5px;
+}
+
+.no-records {
+  color: var(--dark-gray);
+  font-style: italic;
+  font-size: 13px;
+  padding: 5px 0;
+}
+
+/* Race Results */
 .race-container {
   font-family: Arial, sans-serif;
-  width: 50vw; /* Set the container to span 50% of the viewport width */
-  margin: 0; /* Remove default centering */
+  width: 50vw;
+  margin: 0;
   padding: 0px;
 }
 
 .race-list {
   list-style-type: none;
   padding: 10px;
-  margin: 0px;
+  margin: 0;
 }
 
 .race-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
-  background-color: #919191;
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  border: 1px solid var(--medium-gray);
+  background-color: #fafafa;
   border-radius: 10px;
-  margin-bottom: 10px;
 }
 
 .race-header {
@@ -255,15 +534,16 @@ input:focus {
 }
 
 .race-title {
-  font-size: 1.5em;
-  font-weight: bold;
-  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+  color: var(--primary-color);
   width: max-content;
 }
 
 .race-details {
-  font-size: 0.9em;
-  color: #666;
+  font-size: 13px;
+  color: var(--dark-gray);
 }
 
 .race-body {
@@ -277,71 +557,140 @@ input:focus {
 }
 
 .race-time {
+  font-size: 16px;
+  font-weight: bold;
+  font-family: monospace;
   flex: 0 0 10%;
-  font-size: 1.2em;
-  font-weight: bold;
   color: #333;
-  font-weight: bold;
 }
 
-.content {
-  display: flex; /* Enables flexbox layout */
-  flex-direction: column; /* Stacks items vertically */
-  justify-content: left; /* Centers content vertically */
-  align-items: left; /* Centers content horizontally */
-  width: 100%; 
-  height: 100%;
-  margin-top: 5vh;
-  background-color: #f5f5f5; /* Light background for visibility */
-  padding: 50px 10px 10px;
-  box-sizing: border-box; /* Includes padding in height/width calculations */
+/* Race Results Table */
+.results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 20px;
 }
 
-a{
-  text-decoration: none;
-  color: #ffffff;
+.results-table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
 }
 
-a:visited{
-  color: #ffffff;
+.results-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--medium-gray);
 }
 
-.athlete-container {
+.results-table tr:hover {
+  background-color: var(--light-gray);
+}
+
+.results-table tr:last-child td {
+  border-bottom: none;
+}
+
+.event-name {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.meet-name {
+  color: var(--dark-gray);
+  font-size: 13px;
+}
+
+.time-column {
+  font-family: monospace;
+  font-weight: 600;
+  text-align: right;
+}
+
+.date-column {
+  color: var(--dark-gray);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+/* Toggle for All Years */
+.year-toggle {
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+.year-toggle button {
+  background-color: var(--light-gray);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.year-toggle button:hover {
+  background-color: var(--medium-gray);
+}
+
+/* Loading and Error States */
+.loading-container,
+.error-container,
+.empty-state {
   display: flex;
-  width: 100%; /* Ensures it spans the full width */
-  gap: 20px; /* Spacing between the two sections */
-  box-sizing: border-box; /* Includes padding in width calculations */
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
 }
 
-.athlete-main {
-  flex: 3.5; /* Takes 75% of the width */
-  border-radius: 10px;
-  padding: 0px 0px 0px 0px;
-  margin: 0px;
+.loading-spinner {
+  border: 3px solid var(--medium-gray);
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
 }
 
-.athlete-sidebar {
-  flex: 1; /* Takes 25% of the width */
-  background-color: #f4f4f4; /* Add color for debugging */
-  padding: 10px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-body.h1 {
-  margin: 0;
+.error-container {
+  color: #dc3545;
+}
+
+.error-icon {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+
+.empty-icon {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+/* Full Results List */
+.full-results-list {
+  list-style-type: none;
   padding: 0;
 }
 
-h2 {
-  margin: 0;
-  padding: 10px 0px;
+.full-result-item {
+  background-color: #919191;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 20px;
+  margin-bottom: 10px;
 }
 
-.race-list a{
-  color:#000000;
-}
-
+/* SignUp Container */
 .SignUpContainer {
   max-width: 400px;
   margin: 20px auto;
@@ -417,4 +766,112 @@ h2 {
   border-radius: 5px;
   width: 30%;
   height: 100%;
+}
+
+/* Custom link colors for race list */
+.race-list a {
+  color: #000000;
+}
+
+/* Additional body and heading styles */
+.body {
+  text-align: left;
+  max-width: 100%;
+  padding: 0px 10px 10px;
+  background: #ffffff;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+}
+
+body.h1 {
+  margin: 0;
+  padding: 0;
+}
+
+h2 {
+  margin: 0;
+  padding: 10px 0px;
+}
+
+/* Stats and Analysis Tables */
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.stats-table th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.stats-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.stats-section {
+  margin-bottom: 25px;
+}
+
+.stats-section h3 {
+  font-size: 16px;
+  margin: 0 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+/* Year grouping headers */
+.year-header {
+  font-size: 24px;
+  font-weight: bold;
+  margin: 20px 0 10px 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--medium-gray);
+}
+
+.year-header:first-of-type {
+  margin-top: 0;
+}
+
+/* Mobile Responsive Adjustments */
+@media (max-width: 576px) {
+  .athlete-header h1 {
+    font-size: 20px;
+  }
+  
+  .tab-content {
+    padding: 15px 10px;
+  }
+  
+  .results-table {
+    font-size: 13px;
+  }
+  
+  .results-table th,
+  .results-table td {
+    padding: 6px 8px;
+  }
+  
+  .time-column,
+  .date-column {
+    font-size: 12px;
+  }
+  
+  .meet-name {
+    font-size: 12px;
+  }
+  
+  .record-item {
+    padding: 6px 0;
+  }
+  
+  .search-bar,
+  .results-container {
+    width: 90vw;
+  }
 }
