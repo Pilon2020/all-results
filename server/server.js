@@ -109,7 +109,10 @@ const Participant = mongoose.model('Participant', participantSchema);
 const resultSchema = new mongoose.Schema(
   {
     Result_ID:      { type: Number, unique: true, required: true },
+    _race_id: Number,
     Participant_ID: Number,  // link to Participants
+    'First Name': String,
+    'Last Name': String,
     Total_Time:     String,
     Swim_Time:      String,
     T1_Time:        String,
@@ -118,9 +121,8 @@ const resultSchema = new mongoose.Schema(
     Run_Time:       String,
     Penalty_Time:   String,
     Overall_Rank:   Number,
-    Gender_Rank:    Number,
+    Division_Gender_Rank:    Number,
     Age_Group_Rank: Number,
-    Division_Rank:  Number,
     Finish_Status:  String,  // 'Finished', 'DNF', 'DQ', 'DNS'
   },
   { collection: 'Results Table' }
@@ -388,11 +390,20 @@ app.get('/api/prs', async (req, res) => {
 app.get('/', async (req, res) => {
   try {
     const firstRace = await Race.findOne();
-    res.json({ message: 'API is running successfully!', firstRace });
+    const firstResult = await Result.findOne();
+    res.json({ 
+      message: 'API is running successfully!',
+      firstRace,
+      firstResult
+    });
   } catch (error) {
-    res.status(500).json({ error: 'Error fetching first race record', details: error });
+    res.status(500).json({ 
+      error: 'Error fetching first race record', 
+      details: error 
+    });
   }
 });
+
 
 
 /************************************
