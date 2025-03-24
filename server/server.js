@@ -100,6 +100,7 @@ const participantSchema = new mongoose.Schema(
     DNS:            Boolean,
     DNF:            Boolean,
     DQ:             Boolean,
+    Team:           String,
   },
   { collection: 'Participants Table' }
 );
@@ -361,6 +362,47 @@ app.get('/api/results', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// 🔍 Fast search route
+app.get('/api/search', async (req, res) => {
+  const query = req.query.q?.toLowerCase().trim();
+
+  if (!query) {
+    return res.json([]); // Empty query returns empty results
+  }
+
+  try {
+    // Search races by name
+    const races = await Race.find({ Name: new RegExp('^' + query, 'i') }).lean();
+    const formattedRaces = races.map(race => ({
+      id: race.Race_ID,
+      Name: race.Name,
+      Location: race.Location,
+      Year: race.Date ? new Date(race.Date).getFullYear() : 'Unknown',
+    }));
+
+    // Search participants by first or last name starting with query
+    const participants = await Result.find({
+      $or: [
+        { 'First Name': new RegExp('^' + query, 'i') },
+        { 'Last Name': new RegExp('^' + query, 'i') },
+      ]
+    }).lean();
+
+    const formattedParticipants = participants.map(p => ({
+      id: p.Result_ID,
+      Name: `${p['First Name']} ${p['Last Name']}`,
+      Team: p.Team,
+    }));
+
+    // Combine and return
+    res.json([...formattedRaces, ...formattedParticipants]);
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ error: 'Failed to search data' });
+  }
+});
+
 
 // Timing Splits
 app.get('/api/timing-splits', async (req, res) => {
