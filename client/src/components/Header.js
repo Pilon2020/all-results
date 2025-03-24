@@ -87,7 +87,7 @@ function Header() {
   };
 
   return (
-    <header className="header">
+    <header className="Header">
       <div className="header-content">
         <a href="/" className="headerlink"><h1>ALL RESULTS</h1></a>
         <div className="search-container-h">

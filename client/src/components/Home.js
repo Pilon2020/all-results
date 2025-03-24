@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import SearchComponent from './SearchComponent';
-import SignInModal from './SignInModal'; // Import the new SignInModal component
+import '../App.css'; // Make sure the CSS file is imported
 
 function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -8,15 +9,21 @@ function Home() {
   return (
     <div>
       <header className="Header">
-        <h1>ALL RESULTS</h1>
-        <button className="SignInButton">
-        <a href='/signin'>Sign In</a>
-        </button>
+        <div className="header-content">
+          <a href="/" className="headerlink">
+            <h1>ALL RESULTS</h1>
+          </a>
+          <Link to="/signin" className="SignIn">
+            Sign In
+          </Link>
+        </div>
       </header>
-
-      <div className="Home">
-        <SearchComponent searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      </div>
+      <main className="Home" style={{ marginTop: '60px', padding: '20px' }}>
+        <div className="search-container">
+          <SearchComponent searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
+        </div>
+        {/* Other Home page content */}
+      </main>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, forwardRef } from 'react';
 import { Chart } from 'chart.js/auto';
 
 const calculateTrendLine = (data) => {
@@ -17,48 +17,41 @@ const calculateTrendLine = (data) => {
   const sumX2 = xValues.reduce((sum, x) => sum + x * x, 0);
 
   const denominator = (n * sumX2 - sumX * sumX);
-  if (denominator === 0) {
-    console.error("Cannot compute linear regression: identical x values.");
-    return [];
-  }
+  if (denominator === 0) return [];
 
   const m = (n * sumXY - sumX * sumY) / denominator;
   const b = (sumY - m * sumX) / n;
 
-  const firstPointTime = xValues[0];
-  const lastPointTime = xValues[xValues.length - 1];
-
-  const firstPointY = m * firstPointTime + b;
-  const lastPointY = m * lastPointTime + b;
-
   return [
-    { x: filteredData[0].x, y: firstPointY },
-    { x: filteredData[filteredData.length - 1].x, y: lastPointY },
+    { x: filteredData[0].x, y: m * xValues[0] + b },
+    { x: filteredData[filteredData.length - 1].x, y: m * xValues[xValues.length - 1] + b },
   ];
 };
 
 const formatTime = (seconds) => {
-  // Convert seconds to hours, minutes, seconds, and milliseconds
+  if (typeof seconds !== 'number' || isNaN(seconds)) return 'Invalid';
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  const sec = seconds % 60;
-  const milliseconds = (sec % 1).toFixed(1).slice(2); // Extract milliseconds
-
-  // Use toFixed to ensure two decimal places for seconds and milliseconds
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${Math.floor(sec).toString().padStart(2, '0')}.${milliseconds}`;
+  const sec = Math.floor(seconds % 60);
+  const milliseconds = ((seconds % 1) * 10).toFixed(0);
+  return `${hours > 0 ? `${hours}:` : ''}${String(minutes).padStart(2, '0')}:${String(sec).padStart(2, '0')}.${milliseconds}`;
 };
 
-const LineChart = ({ data, yAxisLabel }) => {
-  const chartRef = useRef(null);
-  const chartInstanceRef = useRef(null); // To keep track of the Chart.js instance
+const isTimeLabel = (label) => label?.toLowerCase().includes('time');
+
+const LineChart = forwardRef(({ data, yAxisLabel }, ref) => {
+  const canvasRef = useRef(null);
+  const chartInstanceRef = useRef(null);
 
   useEffect(() => {
-    const ctx = chartRef.current?.getContext('2d');
+    if (!Array.isArray(data) || data.length === 0) return;
+
+    const ctx = canvasRef.current?.getContext('2d');
     if (!ctx) return;
 
     const trendLineData = calculateTrendLine(data);
+    const isTime = isTimeLabel(yAxisLabel);
 
-    // Destroy existing chart instance if it exists
     if (chartInstanceRef.current) {
       chartInstanceRef.current.destroy();
     }
@@ -74,59 +67,57 @@ const LineChart = ({ data, yAxisLabel }) => {
             backgroundColor: 'rgba(75, 192, 192, 0.2)',
             borderWidth: 2,
             fill: false,
-            hoverBackgroundColor: 'rgba(0,0,0,0)',
             spanGaps: true,
           },
           {
             label: 'Trend Line',
             data: trendLineData,
             borderColor: 'rgba(255, 99, 132, 1)',
-            backgroundColor: 'rgba(255, 99, 132, 0.2)',
             borderWidth: 2,
             fill: false,
-            spanGaps: true,
             pointRadius: 0,
-            hoverRadius: 0,
+            spanGaps: true,
           },
         ],
       },
       options: {
         responsive: true,
-        layout: {
-          padding: 20,
-        },
+        layout: { padding: 20 },
         plugins: {
-          legend: {
-            display: false,
-          },
+          legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => {
-                const seconds = context.raw.y;
-                return `Total Time: ${formatTime(seconds)}`;
+              label: (ctx) => {
+                const val = ctx.raw.y;
+                return isTime ? `Time: ${formatTime(val)}` : `Value: ${val.toFixed(2)}`;
               },
-              title: (context) => `Date: ${context[0].label}`,
+              title: (ctx) => `Date: ${ctx[0].label}`,
             },
           },
         },
         scales: {
           x: {
-            type: 'category',
+            type: 'category', // ✅ avoid needing a time adapter
             title: {
               display: true,
               text: 'Date',
             },
-          },
+            ticks: {
+              autoSkip: true,
+              maxRotation: 45,
+              minRotation: 0,
+            },
+          },         
           y: {
             type: 'linear',
             title: {
               display: true,
-              text: yAxisLabel.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase()),
+              text: yAxisLabel.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (c) => c.toUpperCase()),
             },
             ticks: {
-              callback: (value) => {
-                // Use formatTime to display hh:mm:ss.mm format
-                return formatTime(value);
+              autoSkip: true,
+              callback: (val) => {
+                return isTime ? formatTime(val) : val.toFixed(2);
               },
             },
           },
@@ -134,7 +125,10 @@ const LineChart = ({ data, yAxisLabel }) => {
       },
     });
 
-    // Cleanup function
+    if (ref) {
+      ref.current = chartInstanceRef.current;
+    }
+
     return () => {
       if (chartInstanceRef.current) {
         chartInstanceRef.current.destroy();
@@ -143,7 +137,12 @@ const LineChart = ({ data, yAxisLabel }) => {
     };
   }, [data, yAxisLabel]);
 
-  return <canvas ref={chartRef} />;
-};
+  // ⬇️ This render always happens outside the hook
+  if (!Array.isArray(data) || data.length === 0) {
+    return <div>No chart data available.</div>;
+  }
+
+  return <canvas ref={canvasRef} />;
+});
 
 export default LineChart;

@@ -1,46 +1,75 @@
 import React, { useState, useEffect, useRef } from 'react';
 import LineChart from './LineChart';
 
-function AthleteAnalysis({ athlete, groupedResults }) {
-  const [yAxisField, setYAxisField] = useState('swimTime'); // Default Y-axis field
-  const [displaySpeed, setDisplaySpeed] = useState(false); // Toggle for time/speed
-
-  const convertTimeToSeconds = (timeString) => {
-    if (!timeString || !timeString.includes(':')) return null;
-    const timeParts = timeString.split(':').map(Number);
-    return timeParts.reduce((acc, part) => acc * 60 + part, 0);
-  };
+function AthleteAnalysis({ athlete, enrichedResults }) {
+  const [yAxisField, setYAxisField] = useState('swimTime');
+  const [displaySpeed, setDisplaySpeed] = useState(false);
+  const [unitSystem, setUnitSystem] = useState('metric');
+  const chartRefs = useRef([]);
 
   const timeFields = ['swimTime', 't1', 'bikeTime', 't2', 'runTime', 'totalTime'];
 
-  const data = Object.values(groupedResults).flatMap((yearData) =>
-    Object.values(yearData).flatMap((distanceData) =>
-      distanceData.map((result) => {
-        const totalInSeconds = convertTimeToSeconds(result.Total);
-        const t1InSeconds = convertTimeToSeconds(result.T1);
-        const t2InSeconds = convertTimeToSeconds(result.T2);
-        const bikeInSeconds = convertTimeToSeconds(result.Bike);
-        const runInSeconds = convertTimeToSeconds(result.Run);
-        const swimInSeconds = convertTimeToSeconds(result.Swim);
+  const convertTimeToSeconds = (timeString) => {
+    if (!timeString || typeof timeString !== 'string') return null;
+    const parts = timeString.split(':').map(Number);
+    return parts.reduce((acc, val) => acc * 60 + val, 0);
+  };
 
-        return {
-          date: result.Date,
-          totalTime: totalInSeconds,
-          t1: t1InSeconds,
-          t2: t2InSeconds,
-          bikeTime: bikeInSeconds,
-          runTime: runInSeconds,
-          swimTime: swimInSeconds,
-          name: result.Name,
-          race: result.Race,
-          distance: result.Distance,
-          swimDistance: result['Swim Distance'] || null,
-          bikeDistance: result['Bike Distance'] || null,
-          runDistance: result['Run Distance'] || null,
-        };
-      }).filter(Boolean)
-    )
-  );
+  const formatTime = (sec) => {
+    if (!sec || isNaN(sec)) return 'N/A';
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s = Math.floor(sec % 60);
+    return `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  const calculateSpeed = (timeInSec, distanceKm, fieldType) => {
+    if (!timeInSec || !distanceKm || isNaN(timeInSec) || isNaN(distanceKm)) return null;
+    const distanceMi = distanceKm * 0.621371;
+
+    if (fieldType === 'swim') {
+      const poolLength = unitSystem === 'imperial' ? 91.44 : 100;
+      const pacePer100 = (timeInSec / (distanceKm * 1000)) * poolLength;
+      return pacePer100 / 60;
+    }
+
+    if (fieldType === 'bike' || fieldType === 'total') {
+      return unitSystem === 'imperial'
+        ? (distanceMi / timeInSec) * 3600
+        : (distanceKm / timeInSec) * 3600;
+    }
+
+    if (fieldType === 'run') {
+      return unitSystem === 'imperial'
+        ? (timeInSec / distanceMi) / 60
+        : (timeInSec / distanceKm) / 60;
+    }
+
+    return null;
+  };
+
+  const data = enrichedResults.map(result => {
+    const parsedDate = new Date(result.Date);
+    if (!parsedDate || isNaN(parsedDate)) return null;
+
+    return {
+      date: parsedDate,
+      race: result.Race,
+      distance: result.Distance,
+      swimDistance: result.swimDistance,
+      bikeDistance: result.bikeDistance,
+      runDistance: result.runDistance,
+      totalDistance: result.TotalDistance || (
+        result.swimDistance + result.bikeDistance + result.runDistance
+      ),
+      swimTime: convertTimeToSeconds(result.Swim_Time),
+      t1: convertTimeToSeconds(result.T1_Time),
+      bikeTime: convertTimeToSeconds(result.Bike_Time),
+      t2: convertTimeToSeconds(result.T2_Time),
+      runTime: convertTimeToSeconds(result.Run_Time),
+      totalTime: convertTimeToSeconds(result.Total_Time),
+    };
+  }).filter(Boolean);
 
   const groupedByDistance = data.reduce((acc, entry) => {
     if (!acc[entry.distance]) acc[entry.distance] = [];
@@ -48,184 +77,163 @@ function AthleteAnalysis({ athlete, groupedResults }) {
     return acc;
   }, {});
 
-  const calculateSpeed = (timeInSeconds, distance, unit) => {
-    if (!timeInSeconds || !distance) return null;
-    let speed = null;
-
-    if (unit === 'swim') {
-      const speedInMetersPerSecond = distance / timeInSeconds;
-      const timeFor100Meters = 100 / speedInMetersPerSecond;
-      speed = timeFor100Meters;
-    } else if (unit === 'bike') {
-      speed = (distance / timeInSeconds) * 3600 / 1.60934;
-    } else if (unit === 'run') {
-      const speedInMilesPerHour = (distance / timeInSeconds) * 3600 / 0.621371;
-      const timePerMileInHours = 1 / speedInMilesPerHour;
-      const timePerMileInMinutes = timePerMileInHours * 60;
-      speed = timePerMileInMinutes;
-    }
-
-    return speed;
-  };
-
-  const getChartData = (distanceData) => {
-    return distanceData.map((entry) => {
-      const time = entry[yAxisField];
-      let speed = null;
+  const getChartData = (entries) => {
+    return entries.map(entry => {
+      const raw = entry[yAxisField];
+      let value;
 
       if (displaySpeed) {
-        if (yAxisField === 'swimTime') speed = calculateSpeed(time, entry.swimDistance, 'swim');
-        if (yAxisField === 'bikeTime') speed = calculateSpeed(time, entry.bikeDistance, 'bike');
-        if (yAxisField === 'runTime') speed = calculateSpeed(time, entry.runDistance, 'run');
-        if (yAxisField === 'totalTime') {
-          const totalDistance =
-            (entry.swimDistance || 0) +
-            (entry.bikeDistance || 0) +
-            (entry.runDistance || 0);
-          speed = calculateSpeed(time, totalDistance, 'bike');
-        }
+        const dist = yAxisField === 'totalTime'
+          ? entry.totalDistance
+          : entry[yAxisField.replace('Time', 'Distance')];
+
+        const fieldType = yAxisField === 'swimTime'
+          ? 'swim'
+          : yAxisField === 'bikeTime'
+          ? 'bike'
+          : yAxisField === 'totalTime'
+          ? 'total'
+          : 'run';
+
+        value = calculateSpeed(raw, dist, fieldType);
+      } else {
+        value = raw;
       }
 
+      if (value === null || isNaN(value)) return null;
+
       return {
-        x: entry.date,
-        y: displaySpeed ? speed : time,
+        x: entry.date.toLocaleDateString('en-US'),
+        y: value
       };
-    }).filter((entry) => entry.y !== null);
+    }).filter(Boolean);
   };
 
   const isSpeedToggleVisible = ['swimTime', 'bikeTime', 'runTime', 'totalTime'].includes(yAxisField);
+  const isUnitToggleEnabled = isSpeedToggleVisible;
 
-  const chartRefs = useRef([]);
-
-  useEffect(() => {
-    chartRefs.current.forEach((ref) => {
-      if (ref && ref.chartInstance) {
-        ref.chartInstance.destroy();
-      }
-    });
-    chartRefs.current = new Array(Object.keys(groupedByDistance).length);
-  }, [yAxisField, displaySpeed, groupedByDistance]);
-
-  const formatTime = (totalSeconds) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = Math.floor(totalSeconds % 60);
-    const milliseconds = Math.round((totalSeconds % 1) * 10); // Round to 1 decimal place
-
-    let timeString = '';
-    if (hours > 0) timeString += `${String(hours).padStart(2, '0')}:`;
-    if (minutes > 0 || hours > 0) timeString += `${String(minutes).padStart(2, '0')}:`;
-    timeString += `${String(seconds).padStart(2, '0')}.${String(milliseconds).padStart(1, '0')}`;
-
-    return timeString;
+  const handleYAxisChange = (value) => {
+    if (value === 't1' || value === 't2') {
+      setDisplaySpeed(false);
+    }
+    setYAxisField(value);
   };
 
-  if (Object.keys(groupedByDistance).length === 0) {
-    return (
-      <div className="empty-state">
-        <p className="no-records">No analysis data available.</p>
-      </div>
-    );
-  }
+  useEffect(() => {
+    chartRefs.current.forEach(ref => {
+      if (ref?.chartInstance) ref.chartInstance.destroy();
+    });
+    chartRefs.current = new Array(Object.keys(groupedByDistance).length);
+  }, [yAxisField, displaySpeed, unitSystem]);
 
   return (
-    <div className="athlete-profile">
-      <div className="tab-content">
-        <h2>Analysis</h2>
-        <p>{athlete.Name} analysis.</p>
+    <div>
+      <div className="toggle-controls">
+        <select
+          value={yAxisField}
+          onChange={(e) => handleYAxisChange(e.target.value)}
+          className="tab-button"
+        >
+          {timeFields.map(field => (
+            <option key={field} value={field}>
+              {field.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase())}
+            </option>
+          ))}
+        </select>
 
-        <div className="stats-section">
-          <div className="filter-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-            <select 
-              onChange={(e) => setYAxisField(e.target.value)} 
-              value={yAxisField}
-              className="tab-button"
-              style={{ padding: '6px 12px' }}
-            >
-              {timeFields.map((field) => (
-                <option key={field} value={field}>
-                  {field.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}
-                </option>
-              ))}
-            </select>
+        <div className="speed-toggles">
+          <label className={isSpeedToggleVisible ? '' : 'disabled'}>
+            <input
+              type="checkbox"
+              checked={displaySpeed}
+              onChange={() => setDisplaySpeed(!displaySpeed)}
+              disabled={!isSpeedToggleVisible}
+            />
+            Display Speed
+          </label>
 
-            {isSpeedToggleVisible && (
-              <label className="year-toggle" style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
-                <input
-                  type="checkbox"
-                  checked={displaySpeed}
-                  onChange={() => setDisplaySpeed(!displaySpeed)}
-                  style={{ marginRight: '5px' }}
-                />
-                Display Speed
-              </label>
-            )}
+          <div className={`unit-toggle ${isUnitToggleEnabled ? '' : 'disabled'}`}>
+            <span>Metric</span>
+            <label className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={unitSystem === 'imperial'}
+                onChange={() => setUnitSystem(unitSystem === 'metric' ? 'imperial' : 'metric')}
+                disabled={!isUnitToggleEnabled}
+              />
+              <span className="slider"></span>
+            </label>
+            <span>Imperial</span>
           </div>
+        </div>
+      </div>
 
-          {Object.keys(groupedByDistance).map((distance, index) => (
-            <div key={distance} className="record-section">
-              <h3>{distance} Distance</h3>
+      {['Sprint', 'Olympic', 'Mixed Relay'].filter(d => groupedByDistance[d]).map((distance, i) => {
+        const entries = groupedByDistance[distance];
+
+        const values = entries.map(entry => {
+          const raw = entry[yAxisField];
+          if (!displaySpeed) return raw;
+
+          const dist = yAxisField === 'totalTime'
+            ? entry.totalDistance
+            : entry[yAxisField.replace('Time', 'Distance')];
+
+          const fieldType = yAxisField === 'swimTime'
+            ? 'swim'
+            : yAxisField === 'bikeTime'
+            ? 'bike'
+            : yAxisField === 'totalTime'
+            ? 'total'
+            : 'run';
+
+          return calculateSpeed(raw, dist, fieldType);
+        }).filter(val => val !== null && !isNaN(val));
+
+        const avg = values.length > 0
+          ? values.reduce((sum, val) => sum + val, 0) / values.length
+          : null;
+
+        const avgDisplay = avg !== null && !isNaN(avg)
+          ? (displaySpeed
+            ? yAxisField === 'swimTime'
+              ? `${avg.toFixed(2)} min/${unitSystem === 'imperial' ? '100yd' : '100m'}`
+              : ['bikeTime', 'totalTime'].includes(yAxisField)
+              ? `${avg.toFixed(2)} ${unitSystem === 'imperial' ? 'mph' : 'km/h'}`
+              : `${avg.toFixed(2)} ${unitSystem === 'imperial' ? 'min/mi' : 'min/km'}`
+            : formatTime(avg))
+          : 'N/A';
+
+        return (
+          <div key={distance} className="year-section">
+                        <div className="record-section">
+              <h3>{distance}</h3>
               <div className="athlete-container">
                 <div className="athlete-main">
                   <LineChart
-                    data={getChartData(groupedByDistance[distance])}
+                    data={getChartData(entries)}
                     yAxisLabel={displaySpeed ? 'Speed' : yAxisField}
-                    ref={(el) => (chartRefs.current[index] = el)}
-                    style={{ width: '100%' }}
+                    ref={el => (chartRefs.current[i] = el)}
                   />
                 </div>
-                <div className="athlete-sidebar" style={{ padding: '15px' }}>
+                <div className="athlete-sidebar">
                   <div className="records-card">
                     <h2>Stats</h2>
                     <div className="record-item">
-                      <span className="distance">
-                        Average {displaySpeed ? 'Speed' : yAxisField.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}:
-                      </span>
-                      <span className="time">
-                        {(() => {
-                          const values = groupedByDistance[distance]
-                            .map((entry) =>
-                              displaySpeed
-                                ? calculateSpeed(
-                                    entry[yAxisField], 
-                                    entry[`${yAxisField.replace('Time', '')}Distance`], 
-                                    yAxisField === 'swimTime' ? 'swim' : yAxisField === 'bikeTime' ? 'bike' : 'run'
-                                  )
-                                : entry[yAxisField]
-                            )
-                            .filter((val) => val !== null);
-                          
-                          const total = values.reduce((sum, val) => sum + val, 0);
-                          const average = total / values.length;
-
-                          if (displaySpeed) {
-                            if (yAxisField === 'swimTime') {
-                              const swimpace = new Date(average*1000).toISOString().slice(14,19);
-                              return `${swimpace} /100 m`;
-                            } else if (yAxisField === 'bikeTime') {
-                              return `${average.toFixed(2)} mph`;
-                            } else if (yAxisField === 'runTime') {
-                              return `${average.toFixed(2)} minutes/mile`;
-                            }
-                          } else {
-                            return formatTime(average);
-                          }
-                        })()}
-                      </span>
+                      <span className="distance">Average:</span>
+                      <span className="time">{avgDisplay}</span>
                     </div>
-                    
-                    {/* Add more stats here */}
                     <div className="record-item">
                       <span className="distance">Events:</span>
-                      <span className="time">{groupedByDistance[distance].length}</span>
+                      <span className="time">{entries.length}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -31,7 +31,187 @@ html, body {
   display: flex;
   flex-direction: column;
 }
-/* Add these styles to your app.css file */
+
+/* ---------------------- */
+/*   Updated Header Area  */
+/* ---------------------- */
+
+/* Header Container */
+.Header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height, 60px);
+  background-color: var(--white, #ffffff);
+  border-bottom: 1px solid var(--border-color, #ddd);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+/* Header Content Layout */
+.header-content {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Header Link (Logo/Title) */
+.headerlink {
+  text-decoration: none;
+  color: var(--text-color, #333);
+}
+.headerlink h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+/* Search Container in Header (right side) */
+.search-container-h {
+  position: relative;
+  width: 300px; /* Adjust width as needed */
+  display: flex;
+  align-items: center;
+}
+
+/* Modern Search Bar */
+.search-bar-h {
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 16px;
+  border: none;
+  outline: none;
+  border-radius: 30px;
+  background-color: var(--search-bg, #ececec);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.search-bar-h:focus-within {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transform: scale(1.01);
+}
+
+/* Input Field inside Search Bar */
+.search-bar-h input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: inherit;
+}
+
+/* When search bar is active/having content, adjust border-radius to connect with dropdown */
+.search-bar-h.has-input {
+  border-radius: 30px 30px 0 0;
+}
+
+/* User Info (if user is signed in) */
+.user-info {
+  margin-left: 10px;
+  font-size: 14px;
+  color: var(--text-color, #333);
+}
+
+/* Sign In Link styled as a button */
+.SignIn {
+  display: inline-block;
+  white-space: nowrap;
+  background-color: var(--primary-color, #0056b3);
+  color: var(--white, #fff);
+  padding: 12px 20px;
+  border-radius: 30px;
+  text-decoration: none;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+  margin-left: 10px;
+}
+.SignIn:hover {
+  background-color: var(--primary-hover, #003d7a);
+}
+
+/* Dropdown Results Container */
+.results-container-h {
+  position: absolute;
+  top: calc(var(--header-height, 60px));
+  right: 20px;
+  width: 300px;
+  margin-top: 2px;
+  padding: 10px 20px;
+  background-color: var(--search-bg, #ececec);
+  border-radius: 0 0 30px 30px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+  display: none;
+  z-index: 10;
+}
+.results-container-h.results-visible {
+  opacity: 1;
+  transform: translateY(0);
+  display: block;
+}
+
+/* Results List Styling */
+.results-list-h {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Individual Result Item */
+.result-item {
+  padding: 10px;
+  margin-bottom: 8px;
+  border-radius: 5px;
+  background-color: var(--result-bg, #474747);
+  transition: background-color 0.3s ease;
+  cursor: pointer;
+}
+.result-item:last-child {
+  margin-bottom: 0;
+}
+.result-item:hover,
+.result-item.highlighted {
+  background-color: var(--result-hover, #adadad);
+}
+
+/* Link inside a Result Item */
+.result-link {
+  text-decoration: none;
+  color: var(--white, #fff);
+  display: block;
+}
+
+/* No Results Message */
+.no-results {
+  color: #d9534f;
+  font-weight: bold;
+  padding: 10px;
+}
+
+/* Responsive Adjustments for Header */
+@media (max-width: 576px) {
+  .search-container-h {
+    width: 200px;
+  }
+  .results-container-h {
+    width: 200px;
+    right: 10px;
+  }
+}
+
+/* ---------------------- */
+/*   End Updated Header   */
+/* ---------------------- */
+
+/* Records and Other Styles */
+
 .record-row {
   display: flex;
   align-items: center;
@@ -50,6 +230,83 @@ html, body {
 .time {
   margin-left: auto; /* Pushes the time to the right */
   text-align: right;
+}
+
+/* New styles for AthleteAnalysis.js enhancements */
+.toggle-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.speed-toggles {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.speed-toggles label,
+.unit-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.unit-toggle span {
+  font-size: 0.85rem;
+}
+
+.unit-toggle.disabled,
+.speed-toggles label.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+/* Toggle switch styling */
+.toggle-switch {
+  position: relative;
+  width: 50px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-switch .slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 5px;
+}
+
+.toggle-switch .slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 5px;
+}
+
+.toggle-switch input:checked + .slider {
+  background-color: rgb(76, 127, 175);
+}
+
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(24px);
 }
 
 /* Add these styles to your app.css file in the Records Section */
@@ -99,7 +356,6 @@ html, body {
   background-color: var(--medium-gray);
 }
 
-
 a {
   text-decoration: none;
   color: var(--primary-color);
@@ -107,42 +363,6 @@ a {
 
 a:hover {
   text-decoration: underline;
-}
-
-/* Header and Navigation */
-.Header {
-  height: var(--header-height);
-  background-color: var(--white);
-  border-bottom: 1px solid var(--border-color);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  margin: 0;
-}
-
-.Header h1 {
-  font-size: 1.25rem;
-  margin: 0;
-  font-weight: 600;
-  flex-grow: 1;
-  text-align: center;
-}
-
-.SignInButton {
-  background-color: #007bff;
-  color: var(--white);
-  padding: 8px 16px;
-  border-radius: var(--border-radius);
-  font-size: 14px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-}
-
-.SignInButton:hover {
-  background-color: var(--primary-hover);
 }
 
 /* Sign Up Link */
@@ -157,7 +377,7 @@ a:hover {
 
 /* Content Layout */
 .content {
-  max-width: 1140px;
+  max-width: 90vw;
   margin: 20px auto;
   padding: 0 15px;
   display: flex;
@@ -178,29 +398,31 @@ a:hover {
   flex-direction: column;
   align-items: center;
   margin: 20px auto;
-  position: relative;
-  z-index: 1;
   max-width: 600px;
 }
 
-.search-bar, .results-container {
-  width: 50vw;
-  margin: 0 auto;
-  border-radius: 10px;
-  padding: 10px;
+.search-bar {
+  width: 100%;
+  padding: 12px 20px;
   font-size: 16px;
   border: none;
   outline: none;
-  background-color: var(--search-bg);
+  border-radius: 30px;
+  background-color: var(--search-bg, rgb(206, 206, 206));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 10px;
-  border-radius: 20px;
-  box-sizing: border-box;
+  border: none;
   outline: none;
-  background-color: transparent;
+  background: transparent;
+  font-size: inherit;
+}
+
+.search-bar:focus-within {
+  transform: scale(1.01);
 }
 
 .search-bar input:focus,
@@ -804,13 +1026,13 @@ h2 {
 .stats-table th {
   background-color: #f8f9fa;
   border-bottom: 2px solid var(--border-color);
-  padding: 8px;
+  padding: 8px 12px;
   text-align: left;
   font-weight: 600;
 }
 
 .stats-table td {
-  padding: 8px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--medium-gray);
 }
 
@@ -875,3 +1097,4 @@ h2 {
     width: 90vw;
   }
 }
+

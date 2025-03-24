@@ -69,7 +69,7 @@ const Race = mongoose.model('Race', raceSchema);
 // 3. Athlete Table
 const athleteSchema = new mongoose.Schema(
   {
-    Athlete_ID:    { type: Number, unique: true, required: true },
+    Athlete_ID:    { type: String, unique: true, required: true },
     First_Name:    String,
     Last_Name:     String,
     DOB:           Date,
@@ -82,7 +82,7 @@ const athleteSchema = new mongoose.Schema(
     Strava_URL:    String,
     Profile_image_URL: String,
   },
-  { collection: 'Athlete Table' }
+  { collection: 'athlete_table' }
 );
 const Athlete = mongoose.model('Athlete', athleteSchema);
 
@@ -159,6 +159,32 @@ const prSchema = new mongoose.Schema(
   { collection: 'PRs Table' }
 );
 const PR = mongoose.model('PR', prSchema);
+
+app.get('/api/athleteInfo', async (req, res) => {
+  const athleteId = req.query.id;
+  console.log("Looking up athlete with ID:", athleteId); // ✅ LOG this
+
+  if (!athleteId) {
+    return res.status(400).json({ error: 'Athlete ID is required' });
+  }
+
+  try {
+    const athlete = await Athlete.findOne({ Athlete_ID: athleteId }).lean();
+    console.log("Athlete found:", athlete); // ✅ LOG this too
+
+    if (!athlete) {
+      return res.status(404).json({ error: 'Athlete not found' });
+    }
+
+    res.status(200).json(athlete);
+  } catch (err) {
+    console.error('Error fetching athlete info:', err); // ✅ More helpful logging
+    res.status(500).json({ error: 'Failed to fetch athlete info', details: err.message });
+  }
+});
+
+
+
 
 /************************************
  *  AUTH MIDDLEWARE
@@ -363,7 +389,6 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
-// 🔍 Fast search route
 app.get('/api/search', async (req, res) => {
   const query = req.query.q?.toLowerCase().trim();
 
@@ -381,22 +406,21 @@ app.get('/api/search', async (req, res) => {
       Year: race.Date ? new Date(race.Date).getFullYear() : 'Unknown',
     }));
 
-    // Search participants by first or last name starting with query
-    const participants = await Result.find({
+    // Search athletes by first or last name
+    const athletes = await Athlete.find({
       $or: [
-        { 'First Name': new RegExp('^' + query, 'i') },
-        { 'Last Name': new RegExp('^' + query, 'i') },
+        { First_Name: new RegExp('^' + query, 'i') },
+        { Last_Name: new RegExp('^' + query, 'i') },
       ]
     }).lean();
 
-    const formattedParticipants = participants.map(p => ({
-      id: p.Result_ID,
-      Name: `${p['First Name']} ${p['Last Name']}`,
-      Team: p.Team,
+    const formattedAthletes = athletes.map(a => ({
+      id: a.Athlete_ID,
+      Name: `${a.First_Name} ${a.Last_Name}`,
+      Team: a.Club_Team || 'N/A',
     }));
 
-    // Combine and return
-    res.json([...formattedRaces, ...formattedParticipants]);
+    res.json([...formattedRaces, ...formattedAthletes]);
   } catch (err) {
     console.error('Search error:', err);
     res.status(500).json({ error: 'Failed to search data' });

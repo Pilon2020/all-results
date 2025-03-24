@@ -58,13 +58,13 @@ function RaceResults({ athlete, groupedResults, yearlyPRs, allTimeRecords, showA
                                       year == allTimeRecords[distance].year;
                    
                     return (
-                      <a href={`/analysis/${result.Race_id}/${athlete._id}`} key={index} style={{textDecoration: "none"}}>
+                      <a href={`/analysis/${result.Race_id}/${athlete.Athlete_ID}`} key={index} style={{textDecoration: "none"}}>
                       <li key={index} className="race-item">
                         <div>
                           <div className="race-title">{result.Race}</div>
                           <div className="race-details">
-                            <span>{result.Date}</span>
-                            {result.Location && (
+                          <span>  {new Date(result.Date).toLocaleDateString('en-GB', {day: '2-digit', month: 'short', year: 'numeric', })}</span>
+                          {result.Location && (
                               <span> • {result.Location}</span>
                             )}
                           </div>
@@ -72,7 +72,7 @@ function RaceResults({ athlete, groupedResults, yearlyPRs, allTimeRecords, showA
                         <div className={`race-time ${isAllTimePR ? 'is-pr' : ''} ${isSeasonBest ? 'is-sr' : ''}`}>
                           {isAllTimePR && <span className="pr-badge">PR</span>}
                           {isSeasonBest && !isAllTimePR && <span className="sr-badge">SR</span>}
-                          {result.Total}
+                          {result.Total_Time||"--:--:--"}
                         </div>
                       </li>
                       </a>

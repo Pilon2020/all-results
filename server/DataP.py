@@ -120,8 +120,7 @@ for sheet_name in sheet_names:
     bike_distance = race_row.get("Bike_Distance")
     run_distance = race_row.get("Run_Distance")
     official_website = race_row.get("Official Website")
-    # Use race type from metadata if available; otherwise, default to "Triathlon"
-    race_type = str(race_row.get("Race Type", "Triathlon")).title()
+    race_type = str(race_row.get("Race Type", "Missing")).title()
 
     # Convert date_value to datetime object
     if isinstance(date_value, str):
@@ -158,7 +157,6 @@ for sheet_name in sheet_names:
         "Total_Participants": len(participants_df),
         "Official_Website": official_website,
         "Race_Type": race_type,
-        "Distance_Type": distance_type,
         "Race_ID": current_race_id
     }
     race_table_data.append(race_entry)
@@ -231,6 +229,7 @@ for sheet_name in sheet_names:
             "Gender": gender,
             "Team": team,
             "Division": division,
+            "Distance": distance,
             "Wave_Start": wave_start_value,
             "processed": False,
             "imported_at": datetime.now(timezone.utc),
