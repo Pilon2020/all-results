@@ -11,7 +11,7 @@ from bson.json_util import dumps, CANONICAL_JSON_OPTIONS
 # ------------------------------
 # CONFIGURATION & PERSISTENT IDS
 # ------------------------------
-excel_path = "C:/Users/pilon/Downloads/2024races.xlsx"
+excel_path = "FilePath.xlsx"
 output_dir = os.path.dirname(excel_path)
 counter_file = os.path.join(output_dir, "id_counters.json")
 
