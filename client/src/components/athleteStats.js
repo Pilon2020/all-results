@@ -297,10 +297,8 @@ console.log(nemesisRows)
             <tbody>
               {nemesisRows.map(row => (
                 <tr key={row.name}>
-                  <td>
-                    <Link to={`/athlete/${row.id}`}>
-                      {row.name}</Link>
-                      </td>
+                    {/* <Link to={`/athlete/${row.id}`}> */}
+                    <td> {row.name} {/* </Link> */ } </td>
                   <td>{row.wins}</td>
                   <td>{row.losses}</td>
                   <td>{row.winPct}%</td>
@@ -329,8 +327,8 @@ console.log(nemesisRows)
             <tbody>
               {victimRows.map(row => (
                 <tr key={row.name}>
-                    <Link to={`/athlete/${row.id}`}>
-                      {row.name}</Link>
+                    {/* <Link to={`/athlete/${row.id}`}> */}
+                    <td> {row.name} {/* </Link> */ } </td>
                   <td>{row.wins}</td>
                   <td>{row.losses}</td>
                   <td>{row.winPct}%</td>
