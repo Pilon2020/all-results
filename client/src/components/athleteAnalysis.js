@@ -120,83 +120,107 @@ function AthleteAnalysis({ athlete, groupedResults }) {
     return timeString;
   };
 
+  if (Object.keys(groupedByDistance).length === 0) {
+    return (
+      <div className="empty-state">
+        <p className="no-records">No analysis data available.</p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ border: '3px solid #ccc', borderTop: 'none', borderRadius: '0px 0px 10px 10px' }}>
-      <div style={{ padding: '10px' }} className="body">
+    <div className="athlete-profile">
+      <div className="tab-content">
         <h2>Analysis</h2>
         <p>{athlete.Name} analysis.</p>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {/* Dropdown to select Y-axis field */}
-          <select onChange={(e) => setYAxisField(e.target.value)} value={yAxisField}>
-            {timeFields.map((field) => (
-              <option key={field} value={field}>
-                {field.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}
-              </option>
-            ))}
-          </select>
+        <div className="stats-section">
+          <div className="filter-controls" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+            <select 
+              onChange={(e) => setYAxisField(e.target.value)} 
+              value={yAxisField}
+              className="tab-button"
+              style={{ padding: '6px 12px' }}
+            >
+              {timeFields.map((field) => (
+                <option key={field} value={field}>
+                  {field.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}
+                </option>
+              ))}
+            </select>
 
-          {/* Toggle for time/speed */}
-          {isSpeedToggleVisible && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-              <input
-                type="checkbox"
-                checked={displaySpeed}
-                onChange={() => setDisplaySpeed(!displaySpeed)}
-              />
-              Display Speed
-            </label>
-          )}
-        </div>
-
-        {/* Render graphs and additional info */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {Object.keys(groupedByDistance).map((distance, index) => (
-            <div key={distance} style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-              {/* Chart Section */}
-              <div style={{ flex: 3 }}>
-                <h4>{distance} Distance</h4>
-                <LineChart
-                  data={getChartData(groupedByDistance[distance])}
-                  yAxisLabel={displaySpeed ? 'Speed' : yAxisField}
-                  ref={(el) => (chartRefs.current[index] = el)}
-                  style={{
-                    width: '100%',
-                  }}
+            {isSpeedToggleVisible && (
+              <label className="year-toggle" style={{ display: 'flex', alignItems: 'center', margin: 0 }}>
+                <input
+                  type="checkbox"
+                  checked={displaySpeed}
+                  onChange={() => setDisplaySpeed(!displaySpeed)}
+                  style={{ marginRight: '5px' }}
                 />
-              </div>
+                Display Speed
+              </label>
+            )}
+          </div>
 
-              {/* Additional Information Section */}
-              <div style={{ flex: 1, padding: '10px', borderLeft: '1px solid #ccc' }}>
-                <strong>
-                  Average {displaySpeed ? 'Speed' : yAxisField.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}:
-                </strong>
-                {(() => {
-                  const values = groupedByDistance[distance]
-                    .map((entry) =>
-                      displaySpeed
-                        ? calculateSpeed(entry[yAxisField], entry[`${yAxisField.replace('Time', 'Distance')}`], 
-                          yAxisField === 'swimTime' ? 'swim' : yAxisField === 'bikeTime' ? 'bike' : 'run')
-                        : entry[yAxisField]
-                    )
-                    .filter((val) => val !== null);
-                  
-                  const total = values.reduce((sum, val) => sum + val, 0);
-                  const average = total / values.length;
+          {Object.keys(groupedByDistance).map((distance, index) => (
+            <div key={distance} className="record-section">
+              <h3>{distance} Distance</h3>
+              <div className="athlete-container">
+                <div className="athlete-main">
+                  <LineChart
+                    data={getChartData(groupedByDistance[distance])}
+                    yAxisLabel={displaySpeed ? 'Speed' : yAxisField}
+                    ref={(el) => (chartRefs.current[index] = el)}
+                    style={{ width: '100%' }}
+                  />
+                </div>
+                <div className="athlete-sidebar" style={{ padding: '15px' }}>
+                  <div className="records-card">
+                    <h2>Stats</h2>
+                    <div className="record-item">
+                      <span className="distance">
+                        Average {displaySpeed ? 'Speed' : yAxisField.replace(/([A-Z])/g, ' $1').replace(/\b\w/g, (char) => char.toUpperCase())}:
+                      </span>
+                      <span className="time">
+                        {(() => {
+                          const values = groupedByDistance[distance]
+                            .map((entry) =>
+                              displaySpeed
+                                ? calculateSpeed(
+                                    entry[yAxisField], 
+                                    entry[`${yAxisField.replace('Time', '')}Distance`], 
+                                    yAxisField === 'swimTime' ? 'swim' : yAxisField === 'bikeTime' ? 'bike' : 'run'
+                                  )
+                                : entry[yAxisField]
+                            )
+                            .filter((val) => val !== null);
+                          
+                          const total = values.reduce((sum, val) => sum + val, 0);
+                          const average = total / values.length;
 
-                  if (displaySpeed) {
-                    if (yAxisField === 'swimTime') {
-                      const swimpace = new Date(average*1000).toISOString().slice(14,19);
-                      return `${swimpace} /100 m`;
-                    } else if (yAxisField === 'bikeTime') {
-                      return `${average.toFixed(2)} mph`;
-                    } else if (yAxisField === 'runTime') {
-                      return `${average.toFixed(2)} minutes/mile`;
-                    }
-                  } else {
-                    return formatTime(average);
-                  }
-                })()}
+                          if (displaySpeed) {
+                            if (yAxisField === 'swimTime') {
+                              const swimpace = new Date(average*1000).toISOString().slice(14,19);
+                              return `${swimpace} /100 m`;
+                            } else if (yAxisField === 'bikeTime') {
+                              return `${average.toFixed(2)} mph`;
+                            } else if (yAxisField === 'runTime') {
+                              return `${average.toFixed(2)} minutes/mile`;
+                            }
+                          } else {
+                            return formatTime(average);
+                          }
+                        })()}
+                      </span>
+                    </div>
+                    
+                    {/* Add more stats here */}
+                    <div className="record-item">
+                      <span className="distance">Events:</span>
+                      <span className="time">{groupedByDistance[distance].length}</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           ))}

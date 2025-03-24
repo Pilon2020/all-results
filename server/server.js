@@ -1,6 +1,6 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
-require('dotenv').config(); // Ensure this line is at the top of your file
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
@@ -13,174 +13,161 @@ app.use(cors());
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
+// Connect to MongoDB (AllResults database)
 const PORT = process.env.PORT || 5000;
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose
   .connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log('Connected to MongoDB'))
+  .then(() => console.log('Connected to MongoDB (AllResults)'))
   .catch((err) => {
     console.error('MongoDB connection error:', err);
     process.exit(1);
   });
 
-// User Schema and Model
-const userSchema = new mongoose.Schema({
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  birthday: {
-    month: { type: Number, required: true },
-    day: { type: Number, required: true },
-    year: { type: Number, required: true },
+// 1. User Schema (for authentication)
+const userSchema = new mongoose.Schema(
+  {
+    firstName: { type: String, required: true },
+    lastName:  { type: String, required: true },
+    email:     { type: String, required: true, unique: true },
+    password:  { type: String, required: true },
+    birthday: {
+      month: { type: Number, required: true },
+      day:   { type: Number, required: true },
+      year:  { type: Number, required: true },
+    },
   },
-});
+  { collection: 'users' }
+);
 
-const raceResultSchema = new mongoose.Schema({
-  _id: String,
-  race_id: String,
-  Name: String,
-  Athlete_id: String,
-  Gender: String,
-  Race: String,
-  Date: String,
-  Distance: String,
-  Swim: String,
-  T1: String,
-  Bike: String,
-  T2: String,
-  Run: String,
-  Total: String,
-  'Swim Distance': Number,
-  'Bike Distance': Number,
-  'Run Distance': Number,
-  AgeGroup: String,
-});
+const User = mongoose.model('User', userSchema);
 
-const raceInfoSchema = new mongoose.Schema({
-  _id: mongoose.Schema.Types.ObjectId, // Correcting to ObjectId
-  Name: String,
-  Distance: String,
-  Date: String,
-  City: String,
-  State: String,
-  Country: String,
-  'Male Participants': Number,
-  'Female Participants': Number,
-  'Swim Distance': Number,
-  'Bike Distance': Number,
-  'Run Distance': Number,
-  'USAT Sancitioning': String,
-});
+// 2. Race Table
+const raceSchema = new mongoose.Schema(
+  {
+    Race_ID:           { type: Number, unique: true, required: true },
+    Name:              String,
+    Date:              Date,
+    Start_Time:        String,  // Could store as Date if you prefer
+    Location:          String,
+    Latitude:          Number,
+    Longitude:         Number,
+    Distance_Type:     String,  // e.g. 'Olympic', 'Sprint', 'Marathon', etc.
+    Total_Distance:    Number,
+    Swim_Distance:     Number,
+    Bike_Distance:     Number,
+    Run_Distance:      Number,
+    Total_Participants: Number,
+    Official_Website:  String,
+    Race_Type:         String,  // e.g. 'Triathlon', 'Marathon', 'Duathlon'
+  },
+  { collection: 'Race Table' }
+);
+const Race = mongoose.model('Race', raceSchema);
 
+// 3. Athlete Table
+const athleteSchema = new mongoose.Schema(
+  {
+    Athlete_ID:    { type: Number, unique: true, required: true },
+    First_Name:    String,
+    Last_Name:     String,
+    DOB:           Date,
+    Gender:        String,
+    Country:       String,
+    State_Region:  String,
+    Club_Team:     String,
+    USAT_License:  String,
+    Email:         String,
+    Strava_URL:    String,
+    Profile_image_URL: String,
+  },
+  { collection: 'Athlete Table' }
+);
+const Athlete = mongoose.model('Athlete', athleteSchema);
 
-const athleteInfoSchema = new mongoose.Schema({
-  _id: String,
-  Name: String,
-  DOB: String,
-  Gender: String,
-  City: String,
-  State: String,
-  Country: String,
-  USAT: String,
-});
+// 4. Participants Table
+const participantSchema = new mongoose.Schema(
+  {
+    Participant_ID: { type: Number, unique: true, required: true },
+    Athlete_ID:     Number, // could store as ObjectId if referencing Athlete
+    Race_ID:        Number, // could store as ObjectId if referencing Race
+    Bib_Number:     String,
+    Age_Group:      String,
+    Gender:         String,
+    Division:       String,
+    Wave_Start:     String,  // could store as Date if you prefer
+    DNS:            Boolean,
+    DNF:            Boolean,
+    DQ:             Boolean,
+    Team:           String,
+  },
+  { collection: 'Participants Table' }
+);
+const Participant = mongoose.model('Participant', participantSchema);
 
-const RaceResult = mongoose.model('RaceResult', raceResultSchema, 'raceResults');
-const RaceInfo = mongoose.model('RaceInfo', raceInfoSchema, 'raceInfo');
-const AthleteInfo = mongoose.model('AthleteInfo', athleteInfoSchema, 'athleteInfo');
-const User = mongoose.model('User', userSchema, 'users');
+// 5. Results Table
+const resultSchema = new mongoose.Schema(
+  {
+    Result_ID:      { type: Number, unique: true, required: true },
+    _race_id: Number,
+    Participant_ID: Number,  // link to Participants
+    'First Name': String,
+    'Last Name': String,
+    Total_Time:     String,
+    Swim_Time:      String,
+    T1_Time:        String,
+    Bike_Time:      String,
+    T2_Time:        String,
+    Run_Time:       String,
+    Penalty_Time:   String,
+    Overall_Rank:   Number,
+    Division_Gender_Rank:    Number,
+    Age_Group_Rank: Number,
+    Finish_Status:  String,  // 'Finished', 'DNF', 'DQ', 'DNS'
+  },
+  { collection: 'Results Table' }
+);
+const Result = mongoose.model('Result', resultSchema);
 
-// Fetch race results
-app.get('/api/raceResults', async (req, res) => {
-  const { id, name, Athlete_id, race_id } = req.query;
+// 6. Timing Splits Table
+const timingSplitSchema = new mongoose.Schema(
+  {
+    Split_ID:       { type: Number, unique: true, required: true },
+    Participant_ID: Number,  // link to Participants
+    Segment_Name:   String,
+    Split_Time:     String,  // time at this split
+    Distance:       Number,
+    Elapsed_Time:   String,  // time since race start
+    Pace:           String,
+  },
+  { collection: 'Timing Splits Table' }
+);
+const TimingSplit = mongoose.model('TimingSplit', timingSplitSchema);
 
-  try {
-    let query = {};
+// 7. PRs Table
+const prSchema = new mongoose.Schema(
+  {
+    Split_ID:       { type: Number, unique: true, required: true },
+    Participant_ID: Number,  // link to Participants
+    Segment_Name:   String,
+    Split_Time:     String,
+    Distance:       Number,
+    Elapsed_Time:   String,
+    Pace:           String,
+  },
+  { collection: 'PRs Table' }
+);
+const PR = mongoose.model('PR', prSchema);
 
-    if (id) {
-      query._id = id; // Match by unique ID
-    }
-    if (name) {
-      query.Name = { $regex: name, $options: 'i' }; // Case-insensitive name search
-    }
-    if (Athlete_id) {
-      query.Athlete_id = Athlete_id;
-    }
-    if (race_id) {
-      query.race_id = race_id;
-    }
-    // Fetch the results based on query
-    const results = await RaceResult.find(query);
-
-    if (id && results.length === 1) {
-      // If searching by ID and exactly one result is found, return the single object
-      return res.json(results[0]);
-    }
-
-    res.json(results); // Return all matching results as an array
-  } catch (err) {
-    console.error('Error fetching race results:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Fetch race information
-app.get('/api/raceInfo', async (req, res) => {
-  const { name, city, state, id } = req.query;
-  try {
-    const query = {};
-
-    // Ensure that 'id' is a valid ObjectId
-    if (id) {
-      // Use mongoose.Types.ObjectId to convert the id into an ObjectId
-      if (!mongoose.Types.ObjectId.isValid(id)) {
-        return res.status(400).json({ error: 'Invalid ObjectId format' });
-      }
-      query._id = new mongoose.Types.ObjectId(id);  // Convert id into ObjectId
-    }
-    if (name) query.Name = { $regex: name, $options: 'i' };
-    if (city) query.City = { $regex: city, $options: 'i' };
-    if (state) query.State = { $regex: state, $options: 'i' };
-
-    const results = await RaceInfo.find(query);
-
-    // Check if results are found
-    if (results.length === 0) {
-      return res.status(404).json({ error: 'No races found with the provided query' });
-    }
-
-    res.json(results); // Return the found data
-  } catch (err) {
-    console.error('Error fetching race info:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-
-
-// Fetch athlete information
-app.get('/api/athleteInfo', async (req, res) => {
-  const { name } = req.query;
-
-  try {
-    const query = {};
-    if (name) {
-      query.Name = { $regex: name, $options: 'i' }; // Case-insensitive search
-    }
-
-    const results = await AthleteInfo.find(query);
-    res.json(results);
-  } catch (err) {
-    console.error('Error fetching athlete info:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
-// Middleware to authenticate the token
+/************************************
+ *  AUTH MIDDLEWARE
+ ************************************/
 const authenticateToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Access denied. Token missing.' });
+  if (!token) {
+    return res.status(401).json({ error: 'Access denied. Token missing.' });
+  }
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -192,49 +179,13 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
-// Sign-up route
-app.post('/api/signup', async (req, res) => {
-  const { firstName, lastName, email, password, month, day, year } = req.body;
-
-  // Step 1: Validate all required fields
-  if (!firstName || !lastName || !email || !password || !month || !day || !year) {
-    return res.status(400).json({ error: 'All fields are required' });
-  }
-
-  // Step 2: Check if the email is already taken (email should be lowercase)
-  try {
-  // Step 3: Hash the password for security
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // Step 4: Create a new user with the provided details
-    const newUser = new User({
-      firstName,
-      lastName,
-      email: email.toLowerCase(), // Ensure email is stored as lowercase
-      password: hashedPassword,
-      birthday: {
-        month,
-        day,
-        year,
-      },
-    });
-
-    // Step 5: Save the new user to the database
-    await newUser.save();
-
-    // Step 6: Return a success message
-    res.status(201).json({ message: 'User created successfully' });
-  } catch (err) {
-    console.error('Error during sign-up:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
+/************************************
+ *  USER AUTH ROUTES
+ ************************************/
 
 // Check if email is already taken
 app.get('/api/signup', async (req, res) => {
   const { email } = req.query;
-
   if (!email) {
     return res.status(400).json({ error: 'Email is required' });
   }
@@ -244,10 +195,44 @@ app.get('/api/signup', async (req, res) => {
     if (existingUser) {
       return res.status(200).json({ isTaken: true });
     }
-
     res.status(200).json({ isTaken: false });
   } catch (err) {
     console.error('Error checking email:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Sign-up route
+app.post('/api/signup', async (req, res) => {
+  const { firstName, lastName, email, password, month, day, year } = req.body;
+
+  // Validate required fields
+  if (!firstName || !lastName || !email || !password || !month || !day || !year) {
+    return res.status(400).json({ error: 'All fields are required' });
+  }
+
+  try {
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Create new user
+    const newUser = new User({
+      firstName,
+      lastName,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      birthday: {
+        month,
+        day,
+        year,
+      },
+    });
+
+    // Save user
+    await newUser.save();
+    res.status(201).json({ message: 'User created successfully' });
+  } catch (err) {
+    console.error('Error during sign-up:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -256,11 +241,12 @@ app.get('/api/signup', async (req, res) => {
 app.post('/api/signin', async (req, res) => {
   const { email, password } = req.body;
 
-  try {
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
-    }
+  // Basic validation
+  if (!email || !password) {
+    return res.status(400).json({ error: 'Email and password are required' });
+  }
 
+  try {
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
       return res.status(400).json({ error: 'Email or password is incorrect' });
@@ -271,6 +257,7 @@ app.post('/api/signin', async (req, res) => {
       return res.status(400).json({ error: 'Email or password is incorrect' });
     }
 
+    // Generate JWT
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -293,24 +280,23 @@ app.post('/api/signin', async (req, res) => {
   }
 });
 
+// Refresh token route
 app.post('/api/refresh-token', authenticateToken, (req, res) => {
   const { userId, email } = req.user;
-
   const newToken = jwt.sign({ userId, email }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
   res.status(200).json({ token: newToken });
 });
 
+// Get user info from token
 app.get('/api/auth/user', authenticateToken, (req, res) => {
   const user = req.user; // Decoded from token
   res.json({ name: user.name, email: user.email });
 });
 
-
-// Profile route
+// Profile route (example)
 app.get('/api/profile', authenticateToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select('-password'); // Exclude the password field
+    const user = await User.findById(req.user.userId).select('-password'); // exclude password
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -329,11 +315,142 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
   }
 });
 
-// Default route
-app.get('/', (req, res) => {
-  res.json({ message: 'API is running successfully!' });
+/************************************
+ *  API ENDPOINTS FOR TABLES
+ ************************************/
+
+// Races
+app.get('/api/races', async (req, res) => {
+  try {
+    const races = await Race.find();
+    res.json(races);
+  } catch (err) {
+    console.error('Error fetching races:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
+// Athletes
+app.get('/api/athletes', async (req, res) => {
+  try {
+    const athletes = await Athlete.find();
+    res.json(athletes);
+  } catch (err) {
+    console.error('Error fetching athletes:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Participants
+app.get('/api/participants', async (req, res) => {
+  try {
+    const participants = await Participant.find();
+    res.json(participants);
+  } catch (err) {
+    console.error('Error fetching participants:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// Results
+app.get('/api/results', async (req, res) => {
+  try {
+    const results = await Result.find();
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching results:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// 🔍 Fast search route
+app.get('/api/search', async (req, res) => {
+  const query = req.query.q?.toLowerCase().trim();
+
+  if (!query) {
+    return res.json([]); // Empty query returns empty results
+  }
+
+  try {
+    // Search races by name
+    const races = await Race.find({ Name: new RegExp('^' + query, 'i') }).lean();
+    const formattedRaces = races.map(race => ({
+      id: race.Race_ID,
+      Name: race.Name,
+      Location: race.Location,
+      Year: race.Date ? new Date(race.Date).getFullYear() : 'Unknown',
+    }));
+
+    // Search participants by first or last name starting with query
+    const participants = await Result.find({
+      $or: [
+        { 'First Name': new RegExp('^' + query, 'i') },
+        { 'Last Name': new RegExp('^' + query, 'i') },
+      ]
+    }).lean();
+
+    const formattedParticipants = participants.map(p => ({
+      id: p.Result_ID,
+      Name: `${p['First Name']} ${p['Last Name']}`,
+      Team: p.Team,
+    }));
+
+    // Combine and return
+    res.json([...formattedRaces, ...formattedParticipants]);
+  } catch (err) {
+    console.error('Search error:', err);
+    res.status(500).json({ error: 'Failed to search data' });
+  }
+});
+
+
+// Timing Splits
+app.get('/api/timing-splits', async (req, res) => {
+  try {
+    const timingSplits = await TimingSplit.find();
+    res.json(timingSplits);
+  } catch (err) {
+    console.error('Error fetching timing splits:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PRs
+app.get('/api/prs', async (req, res) => {
+  try {
+    const prs = await PR.find();
+    res.json(prs);
+  } catch (err) {
+    console.error('Error fetching PRs:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+/************************************
+ *  DEFAULT ROUTE
+ ************************************/
+app.get('/', async (req, res) => {
+  try {
+    const firstRace = await Race.findOne();
+    const firstResult = await Result.findOne();
+    res.json({ 
+      message: 'API is running successfully!',
+      firstRace,
+      firstResult
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Error fetching first race record', 
+      details: error 
+    });
+  }
+});
+
+
+
+/************************************
+ *  START SERVER
+ ************************************/
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
