@@ -2,18 +2,22 @@ import os
 import json
 import pandas as pd
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 from collections import defaultdict
 from bson.decimal128 import Decimal128
 from bson.json_util import dumps, CANONICAL_JSON_OPTIONS
+from dotenv import load_dotenv
+load_dotenv()
 
 # ------------------------------
 # CONFIGURATION & PERSISTENT IDS
 # ------------------------------
-excel_path = "C:/Users/pilon/Downloads/2024races.xlsx"
+excel_path = os.getenv("EXCEL_FILE_PATH")
 output_dir = os.path.dirname(excel_path)
-counter_file = os.path.join(output_dir, "id_counters.json")
+script_dir = os.path.dirname(__file__)
+repo_root = os.path.abspath(os.path.join(script_dir, ".."))
+counter_file = os.path.join(repo_root, "id_counters.json")
 
 if os.path.exists(counter_file):
     with open(counter_file, "r") as f:
@@ -227,7 +231,9 @@ for sheet_name in sheet_names:
             "Gender": gender,
             "Team": team,
             "Division": division,
-            "Wave_Start": wave_start_value
+            "Wave_Start": wave_start_value,
+            "processed": False,
+            "imported_at": datetime.now(timezone.utc),
         }
         athlete_table_data.append(athlete_entry)
 

@@ -4,41 +4,41 @@ const uri = process.env.MONGO_URI;
 const dbName = process.env.DB_NAME || "AllResults";
 const client = new MongoClient(uri);
 const crypto = require('crypto');
-const Athlete_ID = crypto.randomUUID();
 const readline = require("readline");
 
 async function matchParticipantsToAthletes() {
   try {
     await client.connect();
-    console.log("✅ Connected to database:", dbName);
+    console.log("Connected to database:", dbName);
 
     const db = client.db(dbName);
     const participantsCol = db.collection("Participants Table");
-    const athletesCol = db.collection("athlete_table"); // Create this collection if not yet created
+    const athletesCol = db.collection("athlete_table");
 
-    const participants = await participantsCol.find({}).toArray();
-    console.log(`🔍 Found ${participants.length} participants.`);
+    const participants = await participantsCol.find({ processed: false }).toArray();
+    console.log(`Found ${participants.length} unprocessed participants.`);
+
     const proceed = await waitForConfirmation();
 
     function waitForConfirmation(prompt = "Start matching? (Y/n): ") {
-        return new Promise((resolve) => {
-          const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-          });
-      
-          rl.question(prompt, (answer) => {
-            rl.close();
-            resolve(answer.trim().toLowerCase() === "y");
-          });
+      return new Promise((resolve) => {
+        const rl = readline.createInterface({
+          input: process.stdin,
+          output: process.stdout,
         });
-      }
+
+        rl.question(prompt, (answer) => {
+          rl.close();
+          resolve(answer.trim().toLowerCase() === "y");
+        });
+      });
+    }
 
     if (!proceed) {
-        console.log("🛑 Aborted by user.");
-        await client.close();
-        return;
-      }
+      console.log("Aborted by user.");
+      await client.close();
+      return;
+    }
 
     for (const p of participants) {
       const {
@@ -54,8 +54,6 @@ async function matchParticipantsToAthletes() {
         usat_license,
       } = p;
 
-    //   console.log(`\n➡️ Checking: ${Participant_ID} — ${First_Name} ${Last_Name}`);
-
       const age = Age_Group;
       const race_year = Wave_Start?.getFullYear();
       const estDobYear = race_year - age;
@@ -66,21 +64,18 @@ async function matchParticipantsToAthletes() {
       if (usat_license) {
         matchedAthlete = await athletesCol.findOne({ usat_license });
         if (matchedAthlete) {
-          console.log("✅ Matched by USAT License");
+          console.log("Matched by USAT License");
         }
       }
 
       // Step 2: Fallback to name/gender/age/team
       if (!matchedAthlete) {
-        // console.log("Starting Step 2 Matching")
         const query = {
-            First_Name: new RegExp(`^${First_Name}$`, "i"),
-            Last_Name: new RegExp(`^${Last_Name}$`, "i"),
-          };
-        // console.log(First_Name);
+          First_Name: new RegExp(`^${First_Name}$`, "i"),
+          Last_Name: new RegExp(`^${Last_Name}$`, "i"),
+        };
         const candidates = await athletesCol.find(query).toArray();
-        // console.log(candidates)
-        // console.log(`🧐 Found ${candidates.length} possible name/gender matches.`);
+
         for (const a of candidates) {
           let match = true;
 
@@ -90,7 +85,7 @@ async function matchParticipantsToAthletes() {
 
           if (match) {
             matchedAthlete = a;
-            console.log("✅ Fallback matched with:", a._id);
+            console.log("Fallback matched with:", a._id);
             break;
           }
         }
@@ -103,35 +98,39 @@ async function matchParticipantsToAthletes() {
         );
 
         if (updateResult.modifiedCount > 0) {
-          console.log(`📝 Linked ${Participant_ID} to athlete ${matchedAthlete._id}`);
+          console.log(`Linked ${Participant_ID} to athlete ${matchedAthlete._id}`);
         } else {
-          console.log(`ℹ️ Participant ${Participant_ID} already linked`);
+          console.log(`ℹParticipant ${Participant_ID} already linked`);
         }
-
       } else {
         const newAthlete = {
-            Athlete_ID: crypto.randomUUID(),
-            First_Name,
-            Last_Name,
-            Gender,
-            dob_year: estDobYear,
-            usat_license,
-            participants: [Participant_ID]
+          Athlete_ID: crypto.randomUUID(),
+          First_Name,
+          Last_Name,
+          Gender,
+          dob_year: estDobYear,
+          usat_license,
+          participants: [Participant_ID]
         };
 
         const result = await athletesCol.insertOne(newAthlete);
-        console.log(`🆕 Created new athlete with _id: ${result.insertedId}`);
+        console.log(`Created new athlete with _id: ${result.insertedId}`);
       }
+
+      // Mark participant as processed
+      await participantsCol.updateOne(
+        { Participant_ID },
+        { $set: { processed: true } }
+      );
     }
 
-    console.log("\n✅ Athlete matching complete.");
-
+    console.log("\n Athlete matching complete.");
   } catch (err) {
-    console.error("❌ Error during matching:", err);
+    console.error(" Error during matching:", err);
   } finally {
     await client.close();
-    console.log("🔌 Connection closed.");
+    console.log("Connection closed.");
   }
 }
 
-matchParticipantsToAthletes()
+matchParticipantsToAthletes();
