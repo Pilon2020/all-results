@@ -22,8 +22,8 @@ function SearchComponent({ searchQuery, setSearchQuery }) {
         // Add type based on source
         const resultsWithType = data.map(result => {
           if ('Year' in result) {
-            return { ...result, type: 'race' };
-          } else {
+            return { ...result, type: 'race' };         
+           } else {
             return { ...result, type: 'athlete' };
           }
         });
@@ -44,11 +44,12 @@ function SearchComponent({ searchQuery, setSearchQuery }) {
 
   const handleNavigate = (result) => {
     if (result.type === 'race') {
-      navigate(`/race/${result.id}`);
+      navigate(`/race/${result._id}`);
     } else if (result.type === 'athlete') {
       navigate(`/athlete/${result.id}`);
     } else {
-      navigate(`/search/${searchQuery}`);
+      const safeQuery = searchQuery.trim().toLowerCase().replace(/\s+/g, '_');
+      navigate(`/search/${safeQuery}`);
     }
   };
 
@@ -61,7 +62,8 @@ function SearchComponent({ searchQuery, setSearchQuery }) {
       if (highlightedIndex >= 0 && highlightedIndex < raceResults.length) {
         handleNavigate(raceResults[highlightedIndex]);
       } else {
-        navigate(`/search/${searchQuery}`); 
+        const safeQuery = searchQuery.trim().toLowerCase().replace(/\s+/g, '_');
+        navigate(`/search/${safeQuery}`);
       }
     }
   };
@@ -87,7 +89,7 @@ function SearchComponent({ searchQuery, setSearchQuery }) {
       <div className="search-results">
         {topResults.map((result, index) => (
           <div
-            key={result.id || `${result.Name}-${index}`}
+            key={result._id || `${result.Name}-${index}`}
             className={`search-result ${index === highlightedIndex ? 'highlighted' : ''}`}
             onMouseEnter={() => setHighlightedIndex(index)}
             onClick={() => handleNavigate(result)}

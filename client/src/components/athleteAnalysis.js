@@ -23,6 +23,30 @@ function AthleteAnalysis({ athlete, enrichedResults }) {
     return `${h > 0 ? `${h}:` : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
 
+  // Helper to format pace as MM:SS
+  const formatPace = (paceInMinutes) => {
+    const totalSeconds = Math.round(paceInMinutes * 60);
+    const m = Math.floor(totalSeconds / 60);
+    const s = totalSeconds % 60;
+    return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  };
+
+  // Tooltip formatter that handles swim and run pace formatting
+  const formatTooltip = (value) => {
+    if (displaySpeed) {
+      if (yAxisField === 'swimTime') {
+        return `${formatPace(value)} min/${unitSystem === 'imperial' ? '100yd' : '100m'}`;
+      }
+      if (yAxisField === 'runTime') {
+        return `${formatPace(value)} min/${unitSystem === 'imperial' ? 'mi' : 'km'}`;
+      }
+      if (['bikeTime', 'totalTime'].includes(yAxisField)) {
+        return `${value.toFixed(2)} ${unitSystem === 'imperial' ? 'mph' : 'km/h'}`;
+      }
+    }
+    return formatTime(value);
+  };
+
   const calculateSpeed = (timeInSec, distanceKm, fieldType) => {
     if (!timeInSec || !distanceKm || isNaN(timeInSec) || isNaN(distanceKm)) return null;
     const distanceMi = distanceKm * 0.621371;
@@ -30,6 +54,7 @@ function AthleteAnalysis({ athlete, enrichedResults }) {
     if (fieldType === 'swim') {
       const poolLength = unitSystem === 'imperial' ? 91.44 : 100;
       const pacePer100 = (timeInSec / (distanceKm * 1000)) * poolLength;
+      // Return pace in minutes as a decimal (to be formatted later)
       return pacePer100 / 60;
     }
 
@@ -93,7 +118,9 @@ function AthleteAnalysis({ athlete, enrichedResults }) {
           ? 'bike'
           : yAxisField === 'totalTime'
           ? 'total'
-          : 'run';
+          : yAxisField === 'runTime'
+          ? 'run'
+          : 'unknown';
 
         value = calculateSpeed(raw, dist, fieldType);
       } else {
@@ -185,7 +212,9 @@ function AthleteAnalysis({ athlete, enrichedResults }) {
             ? 'bike'
             : yAxisField === 'totalTime'
             ? 'total'
-            : 'run';
+            : yAxisField === 'runTime'
+            ? 'run'
+            : 'unknown';
 
           return calculateSpeed(raw, dist, fieldType);
         }).filter(val => val !== null && !isNaN(val));
@@ -197,22 +226,25 @@ function AthleteAnalysis({ athlete, enrichedResults }) {
         const avgDisplay = avg !== null && !isNaN(avg)
           ? (displaySpeed
             ? yAxisField === 'swimTime'
-              ? `${avg.toFixed(2)} min/${unitSystem === 'imperial' ? '100yd' : '100m'}`
+              ? `${formatPace(avg)} min/${unitSystem === 'imperial' ? '100yd' : '100m'}`
+              : yAxisField === 'runTime'
+              ? `${formatPace(avg)} min/${unitSystem === 'imperial' ? 'mi' : 'km'}`
               : ['bikeTime', 'totalTime'].includes(yAxisField)
               ? `${avg.toFixed(2)} ${unitSystem === 'imperial' ? 'mph' : 'km/h'}`
-              : `${avg.toFixed(2)} ${unitSystem === 'imperial' ? 'min/mi' : 'min/km'}`
+              : ''
             : formatTime(avg))
           : 'N/A';
 
         return (
           <div key={distance} className="year-section">
-                        <div className="record-section">
+            <div className="record-section">
               <h3>{distance}</h3>
               <div className="athlete-container">
                 <div className="athlete-main">
                   <LineChart
                     data={getChartData(entries)}
                     yAxisLabel={displaySpeed ? 'Speed' : yAxisField}
+                    tooltipFormatter={formatTooltip}
                     ref={el => (chartRefs.current[i] = el)}
                   />
                 </div>

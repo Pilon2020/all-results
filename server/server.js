@@ -46,21 +46,21 @@ const User = mongoose.model('User', userSchema);
 // 2. Race Table
 const raceSchema = new mongoose.Schema(
   {
-    Race_ID:           { type: Number, unique: true, required: true },
-    Name:              String,
-    Date:              Date,
-    Start_Time:        String,  // Could store as Date if you prefer
-    Location:          String,
-    Latitude:          Number,
-    Longitude:         Number,
-    Distance_Type:     String,  // e.g. 'Olympic', 'Sprint', 'Marathon', etc.
-    Total_Distance:    Number,
-    Swim_Distance:     Number,
-    Bike_Distance:     Number,
-    Run_Distance:      Number,
+    Race_ID: { type: Number, unique: true, required: true },
+    Name: String,
+    Date: Date,
+    Start_Time: String,
+    Location: String,
+    Latitude: Number,
+    Longitude: Number,
+    Distance_Type: String,
+    Total_Distance: Number,
+    Swim_Distance: Number,
+    Bike_Distance: Number,
+    Run_Distance: Number,
     Total_Participants: Number,
-    Official_Website:  String,
-    Race_Type:         String,  // e.g. 'Triathlon', 'Marathon', 'Duathlon'
+    Official_Website: String,
+    Race_Type: String,
   },
   { collection: 'Race Table' }
 );
@@ -162,7 +162,6 @@ const PR = mongoose.model('PR', prSchema);
 
 app.get('/api/athleteInfo', async (req, res) => {
   const athleteId = req.query.id;
-  console.log("Looking up athlete with ID:", athleteId); // ✅ LOG this
 
   if (!athleteId) {
     return res.status(400).json({ error: 'Athlete ID is required' });
@@ -170,7 +169,6 @@ app.get('/api/athleteInfo', async (req, res) => {
 
   try {
     const athlete = await Athlete.findOne({ Athlete_ID: athleteId }).lean();
-    console.log("Athlete found:", athlete); // ✅ LOG this too
 
     if (!athlete) {
       return res.status(404).json({ error: 'Athlete not found' });
@@ -400,7 +398,7 @@ app.get('/api/search', async (req, res) => {
     // Search races by name
     const races = await Race.find({ Name: new RegExp('^' + query, 'i') }).lean();
     const formattedRaces = races.map(race => ({
-      id: race.Race_ID,
+      _id: race._id,
       Name: race.Name,
       Location: race.Location,
       Year: race.Date ? new Date(race.Date).getFullYear() : 'Unknown',

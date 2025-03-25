@@ -52,7 +52,8 @@ function Athlete() {
               Race: race.Name || 'Unknown Race',
               Location: race.Location || 'Unknown',
               Date: race.Date || 'Unknown',
-              Race_id: race.Race_ID,
+              Race_id: race._id,
+              Race_ID: race.Race_ID,
               Distance: participant.Distance || race.Distance_Type || 'Unknown Distance',
               swimDistance: race.Swim_Distance || 0,
               bikeDistance: race.Bike_Distance || 0,
@@ -218,7 +219,7 @@ function Athlete() {
 
                       return (
                         <Link
-                          to={`/analysis/${bestResult.Race_id}/${athlete.Athlete_ID}`} /*need to use unique race ID from Race Table */
+                          to={`/race/${bestResult._id}/${athlete.Athlete_ID}`} /*need to use unique race ID from Race Table */
                           key={`current-${distance}`}
                           style={{ textDecoration: "none" }}
                         >
@@ -252,7 +253,7 @@ function Athlete() {
 
                               return (
                                 <Link
-                                  to={`/analysis/${result.Race_id}/${athlete.Athlete_ID}`}
+                                  to={`/race/${result._id}/${athlete.Athlete_ID}`}
                                   key={`${distance}-${year}`}
                                   style={{ textDecoration: "none" }}
                                 >

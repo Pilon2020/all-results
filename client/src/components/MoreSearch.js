@@ -1,26 +1,40 @@
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 
-function MoreResults() {
-  const { id } = useParams(); // This is your search term from the URL (e.g., /search/oliver)
+// Helper function to capitalize each word (for display).
+function capitalizeWords(str) {
+  return str
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
+}
+
+function SearchResults() {
+  const { id } = useParams();
+  // Convert URL-safe query (lowercase with underscores) back to a normal string with spaces.
+  const rawQuery = id ? id.replace(/_/g, ' ') : '';
+  const query = rawQuery.trim();
+  // Create a display version with capitalized words.
+  const displayQuery = capitalizeWords(query);
+  // Use the lowercase query for the API call.
+  const searchTerm = query.toLowerCase();
+
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    const fetchResults = async () => {
-      const trimmedQuery = id?.trim().toLowerCase();
-      if (!trimmedQuery) {
-        setResults([]);
-        return;
-      }
+    if (!searchTerm) return;
 
+    const fetchResults = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/api/search?q=${trimmedQuery}`);
+        // The API endpoint should search both races and athletes.
+        // For athletes, ensure that your backend concatenates the first and last names (with a space) for matching.
+        const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(searchTerm)}`);
         const data = await response.json();
 
-        // Add type to each result (match logic from SearchComponent)
-        const typedResults = data.map(result => {
+        // Apply the same type logic as in your SearchComponent.
+        const resultsWithType = data.map(result => {
           if ('Year' in result) {
             return { ...result, type: 'race' };
           } else {
@@ -28,7 +42,7 @@ function MoreResults() {
           }
         });
 
-        setResults(typedResults);
+        setResults(resultsWithType);
       } catch (err) {
         console.error('Error fetching search results:', err);
       } finally {
@@ -37,19 +51,22 @@ function MoreResults() {
     };
 
     fetchResults();
-  }, [id]);
+  }, [searchTerm, id]);
 
   return (
     <div className="MoreResults content">
       <div className="body">
-        <h1>Results for "{id}"</h1>
+        <h1>Results for "{displayQuery}"</h1>
         {isLoading ? (
           <p>Loading...</p>
         ) : results.length > 0 ? (
           <ul className="full-results-list">
             {results.map(result => (
-              <li key={result.id} className="full-result-item">
-                <a href={`/${result.type}/${result.id}`} className="result-link">
+              <li key={result._id || result.id} className="full-result-item">
+                <Link
+                  to={`/${result.type === 'race' ? 'race' : 'athlete'}/${result.type === 'race' ? result._id : result.id}`}
+                  className="result-link"
+                >
                   <strong>{result.Name}</strong>
                   {result.type === 'race' ? (
                     <>
@@ -62,7 +79,7 @@ function MoreResults() {
                       {result.Team && <span> - {result.Team}</span>}
                     </>
                   )}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -74,4 +91,4 @@ function MoreResults() {
   );
 }
 
-export default MoreResults;
+export default SearchResults;

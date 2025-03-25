@@ -75,7 +75,7 @@ function Header() {
         navigate(`/search/${searchQuery}`);
       } else {
         const result = topResults[highlightedIndex];
-        navigate(`/${result.type}/${result.id}`);
+        navigate(`/${result.type === 'race' ? 'race' : 'athlete'}/${result.type === 'race' ? result._id : result.id}`);
       }
       setSearchQuery('');
       inputRef.current?.blur();

@@ -28,7 +28,7 @@ function App() {
         <Route path="/race/:id" element={<Race />} />
         <Route path="/athlete/:id" element={<Athlete />} />
         <Route path="/search/:id" element={<MoreResults />} />
-        <Route path="/analysis/:id1/:id2" element={<Analysis />} />
+        <Route path="/race/:id1/:id2" element={<Analysis />} />
         <Route path="/SignUp" element={<Signup />} />
         <Route path="/Profile" element={<Profile />} /> {/* Profile Page */}
         <Route path="/SignIn" element={<SignIn />} /> {/* Sign In Page */}

@@ -58,7 +58,7 @@ function RaceResults({ athlete, groupedResults, yearlyPRs, allTimeRecords, showA
                                       year == allTimeRecords[distance].year;
                    
                     return (
-                      <a href={`/analysis/${result.Race_id}/${athlete.Athlete_ID}`} key={index} style={{textDecoration: "none"}}>
+                      <a href={`/race/${result._id}/${athlete.Athlete_ID}`} key={index} style={{textDecoration: "none"}}>
                       <li key={index} className="race-item">
                         <div>
                           <div className="race-title">{result.Race}</div>
