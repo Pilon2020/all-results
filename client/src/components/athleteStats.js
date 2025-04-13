@@ -108,20 +108,20 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     return `${hours > 0 ? hours + ':' : ''}${(hours > 0 && minutes < 10) ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
 
-  // Compute the athlete's own name so we can exclude it from head-to-head comparisons.
+  // Compute the athlete's own name.
   const athleteName = athlete ? `${athlete['First Name']} ${athlete['Last Name']}` : '';
 
-  // --- Head-to-head comparisons code ---
-  const fasterArrays = []; // Competitors that finished faster than the athlete.
-  const slowerArrays = []; // Competitors that finished slower than the athlete.
-  const fasterDetails = []; // Detailed margin info for nemeses.
-  const slowerDetails = []; // Detailed margin info for victims.
+  // --- Head-to-head comparisons (Nemeses & Victims) ---
+  const fasterArrays = [];
+  const slowerArrays = [];
+  const fasterDetails = [];
+  const slowerDetails = [];
 
   validEnrichedResults.forEach(result => {
     const athleteSeconds = timeToSeconds(result.Total_Time);
     if (!athleteSeconds || athleteSeconds === 0) return;
     const athleteID = result.Athlete_ID;
-    const athleteGender = result.Gender || (participantMap.get(result.Participant_ID)?.Gender);
+    const athleteGender = result.Gender || participantMap.get(result.Participant_ID)?.Gender;
     const athleteDivision = participantMap.get(result.Participant_ID)?.Division;
 
     const thisRaceResults = validFullResults
@@ -145,7 +145,7 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     if (!athleteResult) return;
     const athleteTime = athleteResult.timeSeconds;
 
-    // Nemeses: competitors that finished faster than the athlete.
+    // Nemeses.
     const faster = thisRaceResults.filter(r => r.timeSeconds < athleteSeconds).slice(-5);
     const fasterForRace = faster.map(f => {
       const name = `${f['First Name']} ${f['Last Name']}`;
@@ -155,18 +155,18 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     fasterArrays.push(fasterForRace.map(f => f.name));
     fasterDetails.push(...fasterForRace);
 
-    // Victims: competitors that finished slower than the athlete.
+    // Victims.
     const slower = thisRaceResults.filter(r => r.timeSeconds > athleteSeconds).slice(0, 5);
     const slowerForRace = slower.map(s => {
       const name = `${s['First Name']} ${s['Last Name']}`;
-      const margin = s.timeSeconds - athleteSeconds;
+      const margin = s.timeSeconds - athleteTime;
       return { name, margin, participantId: s.Participant_ID };
     });
     slowerArrays.push(slowerForRace.map(s => s.name));
     slowerDetails.push(...slowerForRace);
   });
 
-  // Build overall win/loss stats.
+  // Build win/loss stats.
   const winLossStats = {};
   fasterArrays.forEach(arr => {
     arr.forEach(name => {
@@ -181,7 +181,7 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     });
   });
 
-  // Aggregate margin data for victims.
+  // Aggregate margin data.
   const victimStats = {};
   slowerDetails.forEach(({ name, margin, participantId }) => {
     if (!victimStats[name]) {
@@ -191,8 +191,6 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     victimStats[name].marginSum += margin;
     if (participantId) victimStats[name].participantIds.add(participantId);
   });
-
-  // Aggregate margin data for nemeses.
   const nemesisStats = {};
   fasterDetails.forEach(({ name, margin, participantId }) => {
     if (!nemesisStats[name]) {
@@ -203,7 +201,7 @@ function GeneralStats({ enrichedResults, athlete, races }) {
     if (participantId) nemesisStats[name].participantIds.add(participantId);
   });
 
-  // Prepare rows for the victims table.
+  // Prepare rows for Nemeses and Victims tables.
   const victimRows = Object.keys(victimStats)
     .filter(name => (winLossStats[name]?.wins + winLossStats[name]?.losses) >= 2)
     .map(name => {
@@ -214,11 +212,9 @@ function GeneralStats({ enrichedResults, athlete, races }) {
       const avgMargin = Math.round(victimStats[name].marginSum / victimStats[name].count);
       return { name, wins: athleteWins, losses: athleteLosses, winPct, avgMargin };
     })
-    .filter(row => row.wins > row.losses && row.avgMargin < 200)
+    .filter(row => row.wins > row.losses && row.avgMargin <= 300)
     .sort((a, b) => a.avgMargin - b.avgMargin)
     .slice(0, 5);
-
-  // Prepare rows for the nemeses table.
   const nemesisRows = Object.keys(nemesisStats)
     .filter(name => (winLossStats[name]?.wins + winLossStats[name]?.losses) >= 2)
     .map(name => {
@@ -229,157 +225,227 @@ function GeneralStats({ enrichedResults, athlete, races }) {
       const avgMargin = Math.round(nemesisStats[name].marginSum / nemesisStats[name].count);
       return { name, wins: athleteWins, losses: athleteLosses, winPct, avgMargin };
     })
-    .filter(row => row.losses > row.wins && row.avgMargin <= 200)
+    .filter(row => row.losses > row.wins && row.avgMargin <= 300)
     .sort((a, b) => a.avgMargin - b.avgMargin)
     .slice(0, 5);
 
-  // Compute additional overall performance stats.
+  // Compute overall performance stats.
   const totalRaces = validEnrichedResults.length;
   const bestRank = totalRaces ? Math.min(...validEnrichedResults.map(r => r.Overall_Rank)) : 'N/A';
   const worstRank = totalRaces ? Math.max(...validEnrichedResults.map(r => r.Overall_Rank)) : 'N/A';
-  const avgRank = totalRaces ? (validEnrichedResults.reduce((sum, r) => sum + r.Overall_Rank, 0) / totalRaces).toFixed(1) : 'N/A';
-  const timeByDistance = validEnrichedResults.reduce((acc, r) => {
-    const dist = r.Distance;
-    const secs = timeToSeconds(r.Total_Time);
-    if (secs !== null) {
-      if (!acc[dist]) {
-        acc[dist] = { sum: 0, count: 0 };
+  const avgRank = totalRaces
+    ? (validEnrichedResults.reduce((sum, r) => sum + r.Overall_Rank, 0) / totalRaces).toFixed(1)
+    : 'N/A';
+
+  // Function to compute Average Finish Time by Distance.
+  const getAvgFinishTimeByDistance = results => {
+    const timeByDistance = results.reduce((acc, r) => {
+      const dist = r.Distance;
+      const secs = timeToSeconds(r.Total_Time);
+      if (secs !== null) {
+        if (!acc[dist]) {
+          acc[dist] = { sum: 0, count: 0 };
+        }
+        acc[dist].sum += secs;
+        acc[dist].count += 1;
       }
-      acc[dist].sum += secs;
-      acc[dist].count += 1;
-    }
+      return acc;
+    }, {});
+    return Object.entries(timeByDistance).map(([distance, { sum, count }]) => ({
+      distance,
+      avgFinishTime: formatTime(sum / count)
+    }));
+  };
+
+  // Separate Regular (Non-Draft Legal) and Draft Legal results.
+  const regularEnrichedResults = validEnrichedResults.filter(r => !r.draftLegal);
+  const draftLegalEnrichedResults = validEnrichedResults.filter(r => r.draftLegal);
+
+  const regularAvgFinishTimeByDistance = getAvgFinishTimeByDistance(regularEnrichedResults);
+  const draftLegalAvgFinishTimeByDistance = getAvgFinishTimeByDistance(draftLegalEnrichedResults);
+
+  // Races per Year Calculation.
+  const racesPerYear = validEnrichedResults.reduce((acc, r) => {
+    const year = new Date(r.Date).getFullYear();
+    acc[year] = (acc[year] || 0) + 1;
     return acc;
   }, {});
-  const avgFinishTimeByDistance = Object.entries(timeByDistance).map(
-    ([distance, { sum, count }]) => ({
-      distance,
-      avgFinishTime: formatTime(sum / count),
-    })
-  );
 
   return (
     <div className="records-card">
       <h2 className="section-header">General Stats</h2>
 
-      {/* Overall Performance Summary */}
+      {/* Combined Overall Performance, Average Finish Time & Finish Breakdown Section */}
       <div className="record-section">
-        <h3 className="section-subheader">Overall Performance</h3>
-        <ul className="stats-list">
-          <li className="record-item"><strong>Total Races:</strong> {finishBreakdown.Finished}</li>
-          <li className="record-item"><strong>Best Rank:</strong> {bestRank}</li>
-          <li className="record-item"><strong>Worst Rank:</strong> {worstRank}</li>
-          <li className="record-item"><strong>Average Rank:</strong> {avgRank}</li>
-          <li className="record-item">
-            <strong>Average Finish Time:</strong>
-            <ul className="sub-list">
-              {avgFinishTimeByDistance.map(({ distance, avgFinishTime }) => (
-                <li key={distance}>
-                  <span>{distance}: </span>
-                  <span>{avgFinishTime}</span>
-                </li>
-              ))}
-            </ul>
-          </li>
-        </ul>
-      </div>
-
-      {/* Finish Breakdown Section */}
-      <div className="record-section">
-        <h3 className="section-subheader">Finish Breakdown</h3>
-        <ul className="stats-list">
-          {Object.entries(finishBreakdown).map(([k, v]) => (
-            <li key={k} className="record-item"><strong>{k}:</strong> {v}</li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Nemeses Table */}
-      <div className="record-section">
-        <h3 className="section-subheader">Top Nemeses</h3>
-        {nemesisRows.length > 0 ? (
-          <table className="stats-table">
-            <thead>
-              <tr>
-                <th>Nemeses</th>
-                <th>Wins</th>
-                <th>Losses</th>
-                <th>Win%</th>
-                <th>Margin (s)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {nemesisRows.map(row => {
-                const participantIds = nemesisStats[row.name]?.participantIds;
-                const participantId = participantIds ? [...participantIds][0] : null;
-                const athleteID = participantToAthleteMap[participantId] || null;
-                return (
-                  <tr key={row.name}>
-                    <td><Link to={`/athlete/${athleteID}`}>{row.name}</Link></td>
-                    <td>{row.wins}</td>
-                    <td>{row.losses}</td>
-                    <td>{row.winPct}%</td>
-                    <td>{row.avgMargin}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : <p>No nemeses found.</p>}
-      </div>
-
-      {/* Victims Table */}
-      <div className="record-section">
-        <h3 className="section-subheader">Top Victims</h3>
-        {victimRows.length > 0 ? (
-          <table className="stats-table">
-            <thead>
-              <tr>
-                <th>Victims</th>
-                <th>Wins</th>
-                <th>Losses</th>
-                <th>Win%</th>
-                <th>Margin (s)</th>
-              </tr>
-            </thead>
-            <tbody>
-              {victimRows.map(row => {
-                const participantIds = victimStats[row.name]?.participantIds;
-                const participantId = participantIds ? [...participantIds][0] : null;
-                const athleteID = participantToAthleteMap[participantId] || null;
-                return (
-                  <tr key={row.name}>
-                    <td><Link to={`/athlete/${athleteID}`}>{row.name}</Link></td>
-                    <td>{row.wins}</td>
-                    <td>{row.losses}</td>
-                    <td>{row.winPct}%</td>
-                    <td>{row.avgMargin}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        ) : <p>No victims found.</p>}
-      </div>
-
-      {/* Races per Year Section */}
-      <div className="record-section">
-        <h3 className="section-subheader">Races per Year</h3>
-        <ul className="stats-list">
-          {Object.entries(
-            validEnrichedResults.reduce((acc, r) => {
-              const year = new Date(r.Date).getFullYear();
-              acc[year] = (acc[year] || 0) + 1;
-              return acc;
-            }, {})
-          )
-            .sort((a, b) => b[0] - a[0])
-            .map(([year, count]) => (
-              <li key={year} className="record-item">
-                <strong>{year}:</strong> {count}
-              </li>
+        <h4 className="section-subheader">Overall Performance & Finish Breakdown</h4>
+        <div className="race-item" style={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            padding: '10px', 
+            margin: '10px' 
+          }}>
+            {[
+              { title: 'Total Races', value: finishBreakdown.Finished },
+              { title: 'Best Rank', value: bestRank },
+              { title: 'Worst Rank', value: worstRank },
+              { title: 'Average Rank', value: avgRank },
+            ].map(({ title, value }) => (
+              <div key={title} style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: 'calc(100% - 20px)', 
+                margin: '0 auto 5px auto',  
+                padding: '10px',
+              }}>
+                <span className="race-title">{title}:</span>
+                <span className="race-details">{value}</span>
+              </div>
             ))}
-        </ul>
+          </div>
+
+        <div>
+              <h4>Finish Breakdown</h4>
+              <div className="race-item" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '10px', margin:'10px'}}>
+                  {Object.entries(finishBreakdown).map(([category, count]) => (
+                    <div key={category} style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      width: 'calc(100% - 20px)',
+                      padding: '10px 10px',
+                      marginBottom: '5px',
+                      paddingRight:'10px',
+                    }}>
+                      <span className="race-title">{category}:</span>
+                      <span className="race-details">{count}</span>
+                    </div>
+                  ))}
+                </div>
+            </div>
+        {/* Consolidated Average Finish Time & Finish Breakdown Container */}
+        <div className="sub-section">
+          <h4>Average Finish Time & Finish Breakdown</h4>
+            <div className="combined-details">
+              <div className="avg-finish-time-section">
+                <h5>Non-Draft Legal</h5>
+                <ul className="race-list">
+                  {regularAvgFinishTimeByDistance.map(({ distance, avgFinishTime }) => (
+                    <li key={distance} className="race-item">
+                      <span className="race-title">{distance}:</span>
+                      <span className="race-details">{avgFinishTime}</span>
+                    </li>
+                  ))}
+                </ul>
+                <h5>Draft Legal</h5>
+                <ul className="race-list">
+                  {draftLegalAvgFinishTimeByDistance.map(({ distance, avgFinishTime }) => (
+                    <li key={distance} className="race-item">
+                      <span className="race-title">{distance}:</span>
+                      <span className="race-details">{avgFinishTime}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+          </div>
+        </div>
       </div>
+
+      {/* Nemeses Section */}
+        <div>
+          <h4>Top Nemeses</h4>
+          <div className="race-item" style={{ padding: '10px', margin: '10px', flexDirection: 'column', paddingBottom:'0px'}}>
+          {nemesisRows.length > 0 ? (
+            <table className="stats-table" style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Nemesis</th>
+                  <th style={{ textAlign: 'right' }}>Wins</th>
+                  <th style={{ textAlign: 'right' }}>Losses</th>
+                  <th style={{ textAlign: 'right' }}>Win%</th>
+                  <th style={{ textAlign: 'right' }}>Margin (s)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {nemesisRows.map(row => {
+                  const participantIds = nemesisStats[row.name]?.participantIds;
+                  const participantId = participantIds ? [...participantIds][0] : null;
+                  const athleteID = participantToAthleteMap[participantId] || null;
+                  return (
+                    <tr key={row.name}>
+                      <td><Link to={`/athlete/${athleteID}`}>{row.name}</Link></td>
+                      <td style={{ textAlign: 'right' }}>{row.wins}</td>
+                      <td style={{ textAlign: 'right' }}>{row.losses}</td>
+                      <td style={{ textAlign: 'right' }}>{row.winPct}%</td>
+                      <td style={{ textAlign: 'right' }}>{row.avgMargin}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : <div style={{ padding: '10px' }}>No nemeses found.</div>}
+          </div>
+        </div>
+
+        {/* Victims Section */}
+        <div >
+          <h4>Top Victims</h4>
+          <div className="race-item" style={{ padding: '10px', margin: '10px', flexDirection: 'column', paddingBottom:'0px'}}>
+          {victimRows.length > 0 ? (
+            <table className="stats-table" style={{ width: '100%' }}>
+              <thead>
+                <tr>
+                  <th>Victim</th>
+                  <th style={{ textAlign: 'right' }}>Wins</th>
+                  <th style={{ textAlign: 'right' }}>Losses</th>
+                  <th style={{ textAlign: 'right' }}>Win%</th>
+                  <th style={{ textAlign: 'right' }}>Margin (s)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {victimRows.map(row => {
+                  const participantIds = victimStats[row.name]?.participantIds;
+                  const participantId = participantIds ? [...participantIds][0] : null;
+                  const athleteID = participantToAthleteMap[participantId] || null;
+                  return (
+                    <tr key={row.name}>
+                      <td><Link to={`/athlete/${athleteID}`}>{row.name}</Link></td>
+                      <td style={{ textAlign: 'right' }}>{row.wins}</td>
+                      <td style={{ textAlign: 'right' }}>{row.losses}</td>
+                      <td style={{ textAlign: 'right' }}>{row.winPct}%</td>
+                      <td style={{ textAlign: 'right' }}>{row.avgMargin}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : <div style={{ padding: '10px' }}>No victims found.</div>}
+          </div>
+        </div>
+
+        <div>
+          <h4 style={{ textAlign: 'left' }}>Races per Year</h4>
+          <div className="race-item" style={{margin:'10px', paddingBottom:'0px'}}>
+          <table className="stats-table" style={{ width: '100%'}}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: 'left' }}>Year</th>
+                <th style={{ textAlign: 'right' }}>Races</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(racesPerYear)
+                .sort((a, b) => b[0] - a[0])
+                .map(([year, count]) => (
+                  <tr key={year}>
+                    <td style={{ textAlign: 'left' }}>{year}</td>
+                    <td style={{ textAlign: 'right' }}>{count}</td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+          </div>
+        </div>
     </div>
   );
 }

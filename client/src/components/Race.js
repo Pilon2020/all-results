@@ -1,50 +1,49 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-function Race() {
-  const { id } = useParams();
-  const [race, setRace] = useState([]);
-  const [athlete, setAthlete] = useState(null);
-  const [raceResults, setRaceResults] = useState([]);
+const RaceInfo = () => {
+  const { race_id } = useParams();
+  const [raceData, setRaceData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('raceResults');
-  const [showAllYears, setShowAllYears] = useState(false);
 
-
-  useEffect(()=>{
+  useEffect(() => {
+    console.log(race_id)
+    // Define an async function inside useEffect
     const fetchRaceData = async () => {
       try {
-        const athleteRes = await fetch(`http://localhost:5000/api/athleteInfo?id=${id}`);
-        if (!athleteRes.ok) throw new Error("Failed to fetch athlete profile");
-        const athleteData = await athleteRes.json();
-        setAthlete(athleteData);
-
-        const resultsRes = await fetch(`http://localhost:5000/api/results`);
-        if (!resultsRes.ok) throw new Error("Failed to fetch race results");
-        const resultsData = await resultsRes.json();
-
-        // Filter raceResults by participant ID match
-        const participantIDs = new Set(athleteData.participants || []);
-        const filteredResults = resultsData.filter(r => participantIDs.has(r.Participant_ID));
-        setRaceResults(filteredResults);
+        const response = await fetch(`http://localhost:5000/api/races?_id=${race_id}`);
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        setRaceData(data);
       } catch (err) {
         setError(err.message);
       } finally {
         setLoading(false);
       }
     };
-    if (id) fetchRaceData();
-  }, [id]);
 
-  // Fetch race details using the `id` if needed
+    fetchRaceData();
+  }, [race_id]);
+
+  console.log(raceData)
+  if (loading) return <div>Loading race information...</div>;
+  if (error) return <div>Error: {error}</div>;
+
+
   return (
-    <div className="content"> 
-      <h2>Race Details</h2>
-      <p>Race ID: {id}</p>
-      {/* Add details based on fetched data */}
+    <div style={{ fontFamily: "Arial, sans-serif", paddingTop: "50px", margin: "10px", }}>
+      <h1>Race Info</h1>
+      <p><strong>Race ID:</strong> {race_id}</p>
+      {raceData && (
+        <div>
+          <p>Name: {raceData.Name}</p>
+      </div>
+      )}
     </div>
   );
-}
+};
 
-export default Race;
+export default RaceInfo;

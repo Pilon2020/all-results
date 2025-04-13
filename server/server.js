@@ -61,6 +61,8 @@ const raceSchema = new mongoose.Schema(
     Total_Participants: Number,
     Official_Website: String,
     Race_Type: String,
+    _id: String,
+    Draft_Legal: Boolean,
   },
   { collection: 'Race Table' }
 );
@@ -181,7 +183,16 @@ app.get('/api/athleteInfo', async (req, res) => {
   }
 });
 
-
+app.get('/api/raceInfo', (req, res) => {
+  const { id } = req.query;
+  const race = raceInfoData.find(r => r.id === id);
+  if (race) {
+    // Return as an array if your frontend expects raceInfo[0]
+    res.json([race]);
+  } else {
+    res.status(404).json({ error: "Race not found" });
+  }
+});
 
 
 /************************************
@@ -354,6 +365,37 @@ app.get('/api/races', async (req, res) => {
   }
 });
 
+
+
+
+const { ObjectId } = require('mongodb');
+
+app.get('/api/result/:id', async (req, res) => {
+  try {
+    const result = await Result.findOne({ _id: req.params.id }).lean();
+    if (!result) {
+      return res.status(404).json({ error: 'Result not found' });
+    }
+    res.status(200).json(result);
+  } catch (err) {
+    console.error('Error fetching result info:', err);
+    res.status(500).json({ error: 'Failed to fetch result info', details: err.message });
+  }
+});
+
+app.get('/api/race/:id', async (req, res) => {
+  try {
+    const race = await Race.findOne({ _id: req.params.id }).lean();
+    if (!race) {
+      return res.status(404).json({ error: 'Race not found' });
+    }
+    res.status(200).json(race);
+  } catch (err) {
+    console.error('Error fetching race info:', err);
+    res.status(500).json({ error: 'Failed to fetch race info', details: err.message });
+  }
+});
+
 // Athletes
 app.get('/api/athletes', async (req, res) => {
   try {
@@ -387,15 +429,31 @@ app.get('/api/results', async (req, res) => {
   }
 });
 
+app.post('/api/results', async (req, res) => {
+  const ids = req.body.participant_ids || [];
+
+  try {
+    const numericIDs = ids.map(id => parseInt(id)).filter(id => !isNaN(id));
+    const results = await Result.find({
+      Participant_ID: { $in: numericIDs }
+    }).lean();
+
+    res.json(results);
+  } catch (err) {
+    console.error('Error fetching filtered results:', err.stack || err);
+    res.status(500).json({ error: 'Failed to fetch filtered results' });
+  }
+});
+
 app.get('/api/search', async (req, res) => {
   const query = req.query.q?.toLowerCase().trim();
 
   if (!query) {
-    return res.json([]); // Empty query returns empty results
+    return res.json([]);
   }
 
   try {
-    // Search races by name
+    // Search races by name as before.
     const races = await Race.find({ Name: new RegExp('^' + query, 'i') }).lean();
     const formattedRaces = races.map(race => ({
       _id: race._id,
@@ -404,13 +462,22 @@ app.get('/api/search', async (req, res) => {
       Year: race.Date ? new Date(race.Date).getFullYear() : 'Unknown',
     }));
 
-    // Search athletes by first or last name
-    const athletes = await Athlete.find({
-      $or: [
-        { First_Name: new RegExp('^' + query, 'i') },
-        { Last_Name: new RegExp('^' + query, 'i') },
-      ]
-    }).lean();
+    // Split query if it contains a space.
+    let athletes;
+    if (query.includes(' ')) {
+      const [firstPart, secondPart] = query.split(' ');
+      athletes = await Athlete.find({
+        First_Name: new RegExp('^' + firstPart, 'i'),
+        Last_Name: new RegExp('^' + secondPart, 'i'),
+      }).lean();
+    } else {
+      athletes = await Athlete.find({
+        $or: [
+          { First_Name: new RegExp('^' + query, 'i') },
+          { Last_Name: new RegExp('^' + query, 'i') }
+        ]
+      }).lean();
+    }
 
     const formattedAthletes = athletes.map(a => ({
       id: a.Athlete_ID,
@@ -424,6 +491,7 @@ app.get('/api/search', async (req, res) => {
     res.status(500).json({ error: 'Failed to search data' });
   }
 });
+
 
 
 // Timing Splits

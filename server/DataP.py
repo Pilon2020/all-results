@@ -121,6 +121,7 @@ for sheet_name in sheet_names:
     run_distance = race_row.get("Run_Distance")
     official_website = race_row.get("Official Website")
     race_type = str(race_row.get("Race Type", "Missing")).title()
+    draft_legal = race_row.get("Draft Legal")
 
     # Convert date_value to datetime object
     if isinstance(date_value, str):
@@ -157,7 +158,8 @@ for sheet_name in sheet_names:
         "Total_Participants": len(participants_df),
         "Official_Website": official_website,
         "Race_Type": race_type,
-        "Race_ID": current_race_id
+        "Race_ID": current_race_id,
+        "Draft_Legal": draft_legal
     }
     race_table_data.append(race_entry)
 

@@ -25,10 +25,10 @@ function App() {
         <Route path="/" element={<Home />} />
 
         {/* Dynamic routes for athlete and race pages */}
-        <Route path="/race/:id" element={<Race />} />
+        <Route path="/race/:race_id" element={<Race />} />
         <Route path="/athlete/:id" element={<Athlete />} />
         <Route path="/search/:id" element={<MoreResults />} />
-        <Route path="/race/:id1/:id2" element={<Analysis />} />
+        <Route path="/race/:race_id/:result_id" element={<Analysis />} />
         <Route path="/SignUp" element={<Signup />} />
         <Route path="/Profile" element={<Profile />} /> {/* Profile Page */}
         <Route path="/SignIn" element={<SignIn />} /> {/* Sign In Page */}

@@ -10,6 +10,9 @@ function Header() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
 
+  // Create a safe query string like in your search component
+  const safeQuery = searchQuery.trim().toLowerCase().replace(/\s+/g, '_');
+
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem('token');
@@ -72,7 +75,8 @@ function Header() {
       setHighlightedIndex((prev) => Math.max(prev - 1, 0));
     } else if (e.key === 'Enter') {
       if (highlightedIndex === -1 || highlightedIndex === topResults.length) {
-        navigate(`/search/${searchQuery}`);
+        // Use safeQuery for navigation.
+        navigate(`/search/${safeQuery}`);
       } else {
         const result = topResults[highlightedIndex];
         navigate(`/${result.type === 'race' ? 'race' : 'athlete'}/${result.type === 'race' ? result._id : result.id}`);
@@ -83,7 +87,7 @@ function Header() {
   };
 
   const goToMoreResults = () => {
-    navigate(`/search/${searchQuery}`);
+    navigate(`/search/${safeQuery}`);
   };
 
   return (
@@ -95,7 +99,10 @@ function Header() {
             ref={inputRef}
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setHighlightedIndex(-1);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Search by race name or athlete"
             className={`search-bar-h ${searchQuery.trim() ? 'has-input' : ''}`}
@@ -117,11 +124,11 @@ function Header() {
             <ul className="results-list-h">
               {topResults.map((result, index) => (
                 <li
-                  key={result.id}
+                  key={result.id || `${result.Name}-${index}`}
                   className={`result-item ${highlightedIndex === index ? 'highlighted' : ''}`}
-                  onClick={() => navigate(`/${result.type}/${result.id}`)}
+                  onClick={() => navigate(`/${result.type}/${result.type === 'race' ? result._id : result.id}`)}
                 >
-                  <a href={`/${result.type}/${result.id}`} className="result-link" style={{ color: 'white' }}>
+                  <a href={`/${result.type}/${result.type === 'race' ? result._id : result.id}`} className="result-link" style={{ color: 'white' }}>
                     <strong>{result.Name}</strong>
                     {result.type === 'race' && (
                       <>
@@ -141,7 +148,7 @@ function Header() {
                   className={`result-item ${highlightedIndex === topResults.length ? 'highlighted' : ''}`}
                   onClick={goToMoreResults}
                 >
-                  <a href={`/search/${searchQuery}`} className="result-link more-results">
+                  <a href={`/search/${safeQuery}`} className="result-link more-results">
                     <strong>More Results</strong>
                   </a>
                 </li>

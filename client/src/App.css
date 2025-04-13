@@ -134,6 +134,7 @@ html, body {
   background-color: var(--primary-hover, #003d7a);
 }
 
+
 /* Dropdown Results Container */
 .results-container-h {
   position: absolute;
@@ -680,23 +681,34 @@ a:hover {
   padding: 2px 0;
 }
 
-.year-records {
-  margin-left: 10px;
-}
-
-.year-record {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 4px;
-  font-size: 13px;
-  padding: 3px 0;
-}
-
+/* Adjust Year Alignment in Records Section */
 .year {
-  min-width: 40px;
-  margin-right: 10px;
+  /* Remove forced width so it only takes as much space as needed */
+  min-width: auto;
+  /* Reduce the right margin (or remove if you want it flush to the left) */
+  margin-right: 5px;  /* Adjust this value (try 0 to 5px) as needed */
+  /* Ensure there's no unintended left margin */
+  margin-left: 0;
   color: var(--dark-gray);
 }
+
+/* Optionally adjust the container (if .year is wrapped in a flex container) */
+.year-record {
+  /* If there is extra spacing on the left, remove it */
+  padding-left: 0;  
+  /* Remove or reduce any extra margin (if present) */
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* If the container for both the year and time is shifting the year, try: */
+.record-row {
+  /* Align items to flex-start may help */
+  justify-content: flex-start;
+  gap: 5px; /* smaller gap between year and time */
+}
+
 
 .time {
   font-family: monospace;
@@ -835,12 +847,6 @@ a:hover {
   color: var(--dark-gray);
   font-size: 13px;
   white-space: nowrap;
-}
-
-/* Toggle for All Years */
-.year-toggle {
-  margin-bottom: 15px;
-  font-size: 14px;
 }
 
 .year-toggle button {

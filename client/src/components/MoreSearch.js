@@ -53,6 +53,10 @@ function SearchResults() {
     fetchResults();
   }, [searchTerm, id]);
 
+  // Separate the results into races and athletes.
+  const races = results.filter(result => result.type === 'race');
+  const athletes = results.filter(result => result.type === 'athlete');
+
   return (
     <div className="MoreResults content">
       <div className="body">
@@ -60,29 +64,46 @@ function SearchResults() {
         {isLoading ? (
           <p>Loading...</p>
         ) : results.length > 0 ? (
-          <ul className="full-results-list">
-            {results.map(result => (
-              <li key={result._id || result.id} className="full-result-item">
-                <Link
-                  to={`/${result.type === 'race' ? 'race' : 'athlete'}/${result.type === 'race' ? result._id : result.id}`}
-                  className="result-link"
-                >
-                  <strong>{result.Name}</strong>
-                  {result.type === 'race' ? (
-                    <>
-                      <span className="result-date"> - {result.Year}</span>
-                      <br />
-                      <em>{result.Location}</em>
-                    </>
-                  ) : (
-                    <>
-                      {result.Team && <span> - {result.Team}</span>}
-                    </>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <>
+            {races.length > 0 && (
+              <section className="races-section">
+                <h2>Races</h2>
+                <ul className="races-list" style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                  {races.map(race => (
+                    <li key={race._id || race.id} className="full-result-item">
+                      <Link
+                        to={`/race/${race._id || race.id}`}
+                        className="result-link"
+                      >
+                        <strong>{race.Name}</strong>
+                        <span className="result-date"> - {race.Year}</span>
+                        <br />
+                        <em>{race.Location}</em>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+            {athletes.length > 0 && (
+              <section className="athletes-section">
+                <h2>Participants</h2>
+                <ul className="athletes-list" style={{ listStyleType: 'none', paddingLeft: 0 }}>
+                  {athletes.map(athlete => (
+                    <li key={athlete._id || athlete.id} className="full-result-item">
+                      <Link
+                        to={`/athlete/${athlete._id || athlete.id}`}
+                        className="result-link"
+                      >
+                        <strong>{athlete.Name}</strong>
+                        {athlete.Team && <span> - {athlete.Team}</span>}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            )}
+          </>
         ) : (
           <p className="no-results">No matching results found</p>
         )}
