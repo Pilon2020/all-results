@@ -11,9 +11,9 @@ const RaceInfo = () => {
     const fetchData = async () => {
       try {
         const [resultRes, raceRes, participantsRes] = await Promise.all([
-          fetch(`http://localhost:5000/api/result/${result_id}`),
-          fetch(`http://localhost:5000/api/race/${race_id}`),
-          fetch(`http://localhost:5000/api/participants`)
+          fetch(`http://localhost:5050/api/result/${result_id}`),
+          fetch(`http://localhost:5050/api/race/${race_id}`),
+          fetch(`http://localhost:5050/api/participants`)
         ]);
 
         if (!resultRes.ok || !raceRes.ok || !participantsRes.ok) {
@@ -36,7 +36,7 @@ const RaceInfo = () => {
         );
 
         const participantIDs = matchingParticipants.map(p => p.Participant_ID);
-        const resultsRes = await fetch('http://localhost:5000/api/results', {
+        const resultsRes = await fetch('http://localhost:5050/api/results', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ participant_ids: participantIDs }),

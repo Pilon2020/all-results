@@ -39,15 +39,15 @@ function Athlete() {
   useEffect(() => {
     const fetchAthleteData = async () => {
       try {
-        const athleteRes = await fetch(`http://localhost:5000/api/athleteInfo?id=${id}`);
+        const athleteRes = await fetch(`http://localhost:5050/api/athleteInfo?id=${id}`);
         if (!athleteRes.ok) throw new Error("Failed to fetch athlete profile");
         const athleteData = await athleteRes.json();
         setAthlete(athleteData);
 
         const [resultsRes, racesRes, participantsRes] = await Promise.all([
-          fetch("http://localhost:5000/api/results"),
-          fetch("http://localhost:5000/api/races"),
-          fetch("http://localhost:5000/api/participants")
+          fetch("http://localhost:5050/api/results"),
+          fetch("http://localhost:5050/api/races"),
+          fetch("http://localhost:5050/api/participants")
         ]);
 
         if (!resultsRes.ok || !racesRes.ok || !participantsRes.ok) {

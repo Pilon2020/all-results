@@ -16,7 +16,7 @@ function SearchComponent({ searchQuery, setSearchQuery }) {
       }
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/api/search?q=${query.trim()}`);
+        const response = await fetch(`http://localhost:5050/api/search?q=${query.trim()}`);
         const data = await response.json();
 
         // Add type based on source

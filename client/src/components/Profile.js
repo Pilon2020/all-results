@@ -9,7 +9,7 @@ const Profile = () => {
     // Fetch the profile when the component mounts
     const fetchProfile = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/profile', {
+        const response = await fetch('http://localhost:5050/api/profile', {
           headers: {
             Authorization: `Bearer ${token}`, // Include the JWT token in the header
           },

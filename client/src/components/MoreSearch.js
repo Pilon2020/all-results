@@ -30,7 +30,7 @@ function SearchResults() {
       try {
         // The API endpoint should search both races and athletes.
         // For athletes, ensure that your backend concatenates the first and last names (with a space) for matching.
-        const response = await fetch(`http://localhost:5000/api/search?q=${encodeURIComponent(searchTerm)}`);
+        const response = await fetch(`http://localhost:5050/api/search?q=${encodeURIComponent(searchTerm)}`);
         const data = await response.json();
 
         // Apply the same type logic as in your SearchComponent.

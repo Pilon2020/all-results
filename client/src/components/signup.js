@@ -52,7 +52,7 @@ function SignUp() {
   const handleEmailBlur = async () => {
     if (!emailError && formData.email) {
       try {
-        const response = await fetch(`http://localhost:5000/api/signup?email=${formData.email}`);
+        const response = await fetch(`http://localhost:5050/api/signup?email=${formData.email}`);
         if (!response.ok) {
           throw new Error('Failed to check email');
         }
@@ -100,7 +100,7 @@ function SignUp() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/signup', {
+      const response = await fetch('http://localhost:5050/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),

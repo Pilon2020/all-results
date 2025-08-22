@@ -23,9 +23,9 @@ function GeneralStats({ enrichedResults, athlete, races }) {
 
         // Fetch all necessary data in parallel.
         const [resultsRes, participantsRes, athletesRes] = await Promise.all([
-          fetch('http://localhost:5000/api/results'),
-          fetch('http://localhost:5000/api/participants'),
-          fetch('http://localhost:5000/api/athletes'),
+          fetch('http://localhost:5050/api/results'),
+          fetch('http://localhost:5050/api/participants'),
+          fetch('http://localhost:5050/api/athletes'),
         ]);
 
         const allResults = await resultsRes.json();

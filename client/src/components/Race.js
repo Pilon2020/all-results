@@ -12,7 +12,7 @@ const RaceInfo = () => {
     // Define an async function inside useEffect
     const fetchRaceData = async () => {
       try {
-        const response = await fetch(`http://localhost:5000/api/races?_id=${race_id}`);
+        const response = await fetch(`http://localhost:5050/api/races?_id=${race_id}`);
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }

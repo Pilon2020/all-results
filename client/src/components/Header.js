@@ -18,7 +18,7 @@ function Header() {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await fetch('http://localhost:5000/api/auth/user', {
+          const response = await fetch('http://localhost:5050/api/auth/user', {
             headers: {
               Authorization: `Bearer ${token}`,
             },
