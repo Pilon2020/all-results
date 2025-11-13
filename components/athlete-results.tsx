@@ -6,9 +6,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Clock, TrendingUp, TrendingDown } from "lucide-react"
+import { buildAthleteRaceHref } from "@/lib/race-links"
 
 interface Race {
-  raceId: string
+  raceId?: string
+  id?: string
+  race?: {
+    raceId?: string
+    id?: string
+    race_id?: string
+  }
+  race_id?: string
+  raceID?: string
   name: string
   date: string
   location: string
@@ -41,12 +50,9 @@ export function AthleteResults({ athleteId, races }: AthleteResultsProps) {
             <div className="rounded-2xl bg-muted px-4 py-3 text-3xl font-black tracking-tight text-muted-foreground">
               {year}
             </div>
-            {yearRaces.map((race, index) => (
-              <Link
-                key={`${year}-${index}`}
-                href={`/athlete/${athleteId}/race/${race.raceId}`}
-                className="block"
-              >
+            {yearRaces.map((race, index) => {
+              const href = buildAthleteRaceHref(athleteId, race)
+              const content = (
                 <div className="rounded-2xl border border-border/80 p-4 transition-all hover:border-primary hover:bg-accent/50">
                   <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="flex-1 space-y-2">
@@ -100,8 +106,22 @@ export function AthleteResults({ athleteId, races }: AthleteResultsProps) {
                     </div>
                   </div>
                 </div>
-              </Link>
-            ))}
+              )
+
+              if (!href) {
+                return (
+                  <div key={`${year}-${index}`} className="block opacity-80">
+                    {content}
+                  </div>
+                )
+              }
+
+              return (
+                <Link key={`${year}-${index}`} href={href} className="block">
+                  {content}
+                </Link>
+              )
+            })}
           </div>
         ))}
 

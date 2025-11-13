@@ -6,8 +6,13 @@ import { AthletePRs } from "@/components/athlete-prs"
 import { AthleteContent } from "@/components/athlete-content"
 import { getAthleteById } from "@/lib/data"
 
-export default async function AthleteProfilePage({ params }: { params: { id: string } }) {
-  const athlete = await getAthleteById(params.id)
+type AthleteProfilePageProps = {
+  params: Promise<{ athleteId: string }>
+}
+
+export default async function AthleteProfilePage({ params }: AthleteProfilePageProps) {
+  const { athleteId } = await params
+  const athlete = await getAthleteById(athleteId)
 
   if (!athlete) {
     notFound()
@@ -25,7 +30,7 @@ export default async function AthleteProfilePage({ params }: { params: { id: str
           </div>
 
           <div className="lg:col-span-1">
-            <AthletePRs prs={athlete.prs} />
+            <AthletePRs prs={athlete.prs} athleteId={athlete.athleteId} />
           </div>
         </div>
       </main>

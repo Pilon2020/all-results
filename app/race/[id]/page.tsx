@@ -6,8 +6,13 @@ import { RaceResults } from "@/components/race-results"
 import { RaceMap } from "@/components/race-map"
 import { getRaceById } from "@/lib/data"
 
-export default async function RaceProfilePage({ params }: { params: { id: string } }) {
-  const race = await getRaceById(params.id)
+type RaceProfilePageProps = {
+  params: Promise<{ id: string }>
+}
+
+export default async function RaceProfilePage({ params }: RaceProfilePageProps) {
+  const { id } = await params
+  const race = await getRaceById(id)
 
   if (!race) {
     notFound()

@@ -4,45 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated theme for sports analytics platform with dark background and red accent */
-  --background: oklch(0.12 0 0);
-  --foreground: oklch(0.98 0 0);
-  --card: oklch(0.16 0 0);
-  --card-foreground: oklch(0.98 0 0);
-  --popover: oklch(0.16 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  --primary: oklch(0.55 0.22 25);
-  --primary-foreground: oklch(0.98 0 0);
-  --secondary: oklch(0.22 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  --muted: oklch(0.22 0 0);
-  --muted-foreground: oklch(0.65 0 0);
-  --accent: oklch(0.55 0.22 25);
-  --accent-foreground: oklch(0.98 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.25 0 0);
-  --input: oklch(0.22 0 0);
-  --ring: oklch(0.55 0.22 25);
-  --chart-1: oklch(0.55 0.22 25);
-  --chart-2: oklch(0.65 0.15 85);
-  --chart-3: oklch(0.6 0.18 200);
-  --chart-4: oklch(0.7 0.12 140);
-  --chart-5: oklch(0.75 0.1 60);
+  color-scheme: light;
+  /* Light mode palette for the pro racing analytics brand */
+  --background: oklch(0.98 0.01 95);
+  --foreground: oklch(0.2 0.02 95);
+  --card: oklch(0.99 0.005 95);
+  --card-foreground: oklch(0.2 0.02 95);
+  --popover: oklch(0.99 0.005 95);
+  --popover-foreground: oklch(0.2 0.02 95);
+  --primary: oklch(0.62 0.25 25);
+  --primary-foreground: oklch(0.99 0.005 95);
+  --secondary: oklch(0.94 0.01 95);
+  --secondary-foreground: oklch(0.35 0.015 95);
+  --muted: oklch(0.93 0.005 95);
+  --muted-foreground: oklch(0.55 0.02 95);
+  --accent: oklch(0.92 0.02 95);
+  --accent-foreground: oklch(0.3 0.015 95);
+  --destructive: oklch(0.56 0.25 27);
+  --destructive-foreground: oklch(0.99 0.005 95);
+  --border: oklch(0.9 0.01 95);
+  --input: oklch(0.9 0.01 95);
+  --ring: oklch(0.62 0.25 25);
+  --chart-1: oklch(0.62 0.25 25);
+  --chart-2: oklch(0.64 0.18 85);
+  --chart-3: oklch(0.65 0.16 200);
+  --chart-4: oklch(0.74 0.14 140);
+  --chart-5: oklch(0.78 0.11 60);
   --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: oklch(0.99 0.005 95);
+  --sidebar-foreground: oklch(0.2 0.02 95);
+  --sidebar-primary: oklch(0.62 0.25 25);
+  --sidebar-primary-foreground: oklch(0.99 0.005 95);
+  --sidebar-accent: oklch(0.93 0.005 95);
+  --sidebar-accent-foreground: oklch(0.3 0.015 95);
+  --sidebar-border: oklch(0.9 0.01 95);
+  --sidebar-ring: oklch(0.62 0.25 25);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
+  color-scheme: dark;
+  --background: oklch(0.12 0 0);
+  --foreground: oklch(0.98 0 0);
   --card: oklch(0.145 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.145 0 0);
@@ -123,4 +125,18 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+@layer utilities {
+  .text-3xl {
+    font-size: var(--text-2xl);
+  }
+
+  .py-3 {
+    padding-block: calc(var(--spacing) * 2);
+  }
+}
+
+#radix-_r_1r_-content-results {
+  margin-top: 0px;
 }

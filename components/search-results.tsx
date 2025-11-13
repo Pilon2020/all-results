@@ -29,7 +29,7 @@ export async function SearchResults({ query }: SearchResultsProps) {
           </h2>
           <div className="grid gap-4 md:grid-cols-2">
             {results.athletes.map((athlete) => (
-              <Link key={athlete.athleteId} href={`/athlete/${athlete.athleteId}`}>
+              <Link key={athlete.athleteId} href={`/athletes/${athlete.athleteId}`}>
                 <Card className="hover:border-primary transition-colors cursor-pointer">
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">

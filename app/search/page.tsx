@@ -5,8 +5,13 @@ import { SearchResults } from "@/components/search-results"
 
 export const dynamic = "force-dynamic"
 
-export default function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
-  const query = searchParams?.q ?? ""
+type SearchPageProps = {
+  searchParams: Promise<{ q?: string }>
+}
+
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const resolvedSearchParams = await searchParams
+  const query = resolvedSearchParams?.q ?? ""
 
   return (
     <div className="min-h-screen bg-background">

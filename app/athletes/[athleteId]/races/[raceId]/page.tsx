@@ -10,12 +10,13 @@ import { RaceAnalysisComparison } from "@/components/race-analysis-comparison"
 import { Button } from "@/components/ui/button"
 import { getAthleteRaceAnalysis } from "@/lib/data"
 
-export default async function AthleteRaceAnalysisPage({
-  params,
-}: {
-  params: { athleteId: string; raceId: string }
-}) {
-  const data = await getAthleteRaceAnalysis(params.athleteId, params.raceId)
+type AthleteRaceAnalysisPageProps = {
+  params: Promise<{ athleteId: string; raceId: string }>
+}
+
+export default async function AthleteRaceAnalysisPage({ params }: AthleteRaceAnalysisPageProps) {
+  const { athleteId, raceId } = await params
+  const data = await getAthleteRaceAnalysis(athleteId, raceId)
 
   if (!data) {
     notFound()
@@ -28,7 +29,7 @@ export default async function AthleteRaceAnalysisPage({
       <main className="container mx-auto px-4 py-8">
         <div className="mb-6">
           <Button variant="ghost" asChild className="gap-2">
-            <Link href={`/athlete/${params.athleteId}`}>
+            <Link href={`/athletes/${athleteId}`}>
               <ArrowLeft className="h-4 w-4" />
               Back to Athlete Profile
             </Link>

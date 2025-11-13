@@ -1,85 +1,112 @@
 "use client"
 
-import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react"
 
-interface User {
-  id: string
-  email: string
-  name: string
-  claimedAthleteId?: string
-}
+import type { ProfileUpdateInput, PublicUser, SignUpInput } from "@/lib/auth-helpers"
 
 interface AuthContextType {
-  user: User | null
+  user: PublicUser | null
   signIn: (email: string, password: string) => Promise<void>
-  signUp: (email: string, password: string, name: string) => Promise<void>
+  signUp: (data: SignUpInput) => Promise<void>
   signOut: () => void
-  claimAthlete: (athleteId: string) => void
-  updateAthleteProfile: (athleteId: string, data: { instagram?: string; strava?: string }) => void
+  claimAthlete: (athleteId: string) => Promise<void>
+  updateProfile: (data: ProfileUpdateInput) => Promise<PublicUser>
 }
+
+const SESSION_KEY = "user"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+const request = async <T>(url: string, body: unknown): Promise<T> => {
+  let response: Response
 
-  // Load user from localStorage on mount
+  try {
+    response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    })
+  } catch {
+    throw new Error("Unable to reach the server. Please check your connection and try again.")
+  }
+
+  const data = await response.json().catch(() => ({}))
+
+  if (!response.ok) {
+    throw new Error(data?.error || "Unable to process your request.")
+  }
+
+  return data as T
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<PublicUser | null>(null)
+
+  const persistSession = (authUser: PublicUser) => {
+    setUser(authUser)
+    localStorage.setItem(SESSION_KEY, JSON.stringify(authUser))
+  }
+
+  const clearSession = () => {
+    setUser(null)
+    localStorage.removeItem(SESSION_KEY)
+  }
+
   useEffect(() => {
-    const storedUser = localStorage.getItem("user")
+    const storedUser = localStorage.getItem(SESSION_KEY)
     if (storedUser) {
-      setUser(JSON.parse(storedUser))
+      try {
+        const parsed = JSON.parse(storedUser) as PublicUser
+        setUser(parsed)
+      } catch {
+        clearSession()
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    // Mock sign in - in a real app, this would call an API
-    const mockUser = {
-      id: "user-1",
-      email,
-      name: email.split("@")[0],
-    }
-    setUser(mockUser)
-    localStorage.setItem("user", JSON.stringify(mockUser))
+    const { user: signedInUser } = await request<{ user: PublicUser }>("/api/auth/sign-in", { email, password })
+    persistSession(signedInUser)
   }
 
-  const signUp = async (email: string, password: string, name: string) => {
-    // Mock sign up - in a real app, this would call an API
-    const mockUser = {
-      id: "user-" + Date.now(),
-      email,
-      name,
-    }
-    setUser(mockUser)
-    localStorage.setItem("user", JSON.stringify(mockUser))
+  const signUp = async (payload: SignUpInput) => {
+    const { user: createdUser } = await request<{ user: PublicUser }>("/api/auth/sign-up", payload)
+    persistSession(createdUser)
   }
 
   const signOut = () => {
-    setUser(null)
-    localStorage.removeItem("user")
+    clearSession()
   }
 
-  const claimAthlete = (athleteId: string) => {
-    if (user) {
-      const updatedUser = { ...user, claimedAthleteId: athleteId }
-      setUser(updatedUser)
-      localStorage.setItem("user", JSON.stringify(updatedUser))
-
-      // Store claimed athlete data
-      const claimedAthletes = JSON.parse(localStorage.getItem("claimedAthletes") || "{}")
-      claimedAthletes[athleteId] = user.id
-      localStorage.setItem("claimedAthletes", JSON.stringify(claimedAthletes))
+  const updateProfile = async (data: ProfileUpdateInput) => {
+    if (!user) {
+      throw new Error("You must be signed in to update your profile.")
     }
+
+    const { user: updatedUser } = await request<{ user: PublicUser }>("/api/profile", {
+      userId: user.id,
+      ...data,
+    })
+    persistSession(updatedUser)
+    return updatedUser
   }
 
-  const updateAthleteProfile = (athleteId: string, data: { instagram?: string; strava?: string }) => {
-    // Store athlete profile updates
-    const athleteProfiles = JSON.parse(localStorage.getItem("athleteProfiles") || "{}")
-    athleteProfiles[athleteId] = { ...athleteProfiles[athleteId], ...data }
-    localStorage.setItem("athleteProfiles", JSON.stringify(athleteProfiles))
+  const claimAthlete = async (athleteId: string) => {
+    if (!user) {
+      throw new Error("You must be signed in to claim an athlete.")
+    }
+
+    const { user: updatedUser } = await request<{ user: PublicUser }>("/api/auth/claim", {
+      userId: user.id,
+      athleteId,
+    })
+
+    persistSession(updatedUser)
   }
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signUp, signOut, claimAthlete, updateAthleteProfile }}>
+    <AuthContext.Provider value={{ user, signIn, signUp, signOut, claimAthlete, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

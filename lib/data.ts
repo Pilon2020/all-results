@@ -1,6 +1,6 @@
 import "server-only"
 
-import type { WithId } from "mongodb"
+import type { Filter, WithId } from "mongodb"
 
 import { getDataDb } from "./mongodb"
 
@@ -36,6 +36,7 @@ export interface Athlete {
     strava?: string
     instagram?: string
   }
+  avatarUrl?: string
   prs: {
     sprint?: AthletePR
     olympic?: AthletePR
@@ -152,6 +153,47 @@ export interface AthleteRaceAnalysis {
   }
 }
 
+type AthleteRaceAnalysisDoc = AthleteRaceAnalysis & {
+  athlete: AthleteRaceAnalysis["athlete"] & { athleteId?: string }
+  race: AthleteRaceAnalysis["race"] & { raceId?: string }
+  athleteId?: string
+  raceId?: string
+}
+
+type RaceAnalysisLookup = Map<string, string>
+
+const ATHLETE_ANALYSIS_FIELDS = ["athlete.id", "athlete.athleteId", "athleteId"] as const
+const RACE_ANALYSIS_FIELDS = ["race.id", "race.raceId", "raceId"] as const
+
+type RawRecentRace = AthleteRaceSummary &
+  Partial<{
+    id: string
+    race_id: string
+    raceID: string
+    race: {
+      id?: string
+      raceId?: string
+      race_id?: string
+      raceID?: string
+      name?: string
+      date?: string
+      location?: string
+      distance?: string
+    }
+  }>
+
+type RawPrRecord = AthletePR &
+  Partial<{
+    raceDetails: {
+      id?: string
+      raceId?: string
+      race_id?: string
+      raceID?: string
+      name?: string
+      date?: string
+    }
+  }>
+
 export interface SearchDirectoryResults {
   athletes: Array<{
     athleteId: string
@@ -188,8 +230,23 @@ function escapeRegexTerm(term: string) {
 
 export async function getAthleteById(athleteId: string): Promise<Athlete | null> {
   const db = await getDataDb()
-  const doc = await db.collection<Athlete>("athletes").findOne({ athleteId })
-  return doc ? withoutId(doc) : null
+  const [athleteDoc, raceAnalysisDocs] = await Promise.all([
+    db.collection<Athlete>("athletes").findOne({ athleteId }),
+    db
+      .collection<AthleteRaceAnalysisDoc>("athleteRaceResults")
+      .find(buildAthleteRaceAnalysisAthleteFilter(athleteId))
+      .toArray(),
+  ])
+
+  if (!athleteDoc) {
+    return null
+  }
+
+  const raceLookup = buildRaceAnalysisLookup(
+    raceAnalysisDocs.map((doc) => normalizeAthleteRaceAnalysis(withoutId(doc))),
+  )
+
+  return normalizeAthlete(withoutId(athleteDoc), raceLookup)
 }
 
 export async function getRaceById(raceId: string): Promise<RaceProfile | null> {
@@ -204,9 +261,9 @@ export async function getAthleteRaceAnalysis(
 ): Promise<AthleteRaceAnalysis | null> {
   const db = await getDataDb()
   const doc = await db
-    .collection<AthleteRaceAnalysis>("athleteRaceResults")
-    .findOne({ "athlete.id": athleteId, "race.id": raceId })
-  return doc ? withoutId(doc) : null
+    .collection<AthleteRaceAnalysisDoc>("athleteRaceResults")
+    .findOne(buildAthleteRaceAnalysisQuery(athleteId, raceId))
+  return doc ? normalizeAthleteRaceAnalysis(withoutId(doc)) : null
 }
 
 export async function searchDirectory(query: string): Promise<SearchDirectoryResults> {
@@ -283,4 +340,154 @@ export async function getTopAthletes(limit = 10): Promise<RankedAthlete[]> {
     team: doc.team,
     eloScore: doc.eloScore,
   }))
+}
+
+function buildAthleteRaceAnalysisQuery(
+  athleteId: string,
+  raceId: string,
+): Filter<AthleteRaceAnalysisDoc> {
+  return {
+    $and: [
+      { $or: ATHLETE_ANALYSIS_FIELDS.map((field) => ({ [field]: athleteId })) },
+      { $or: RACE_ANALYSIS_FIELDS.map((field) => ({ [field]: raceId })) },
+    ],
+  } as Filter<AthleteRaceAnalysisDoc>
+}
+
+function normalizeAthleteRaceAnalysis(doc: AthleteRaceAnalysisDoc): AthleteRaceAnalysis {
+  const { athleteId: legacyAthleteId, raceId: legacyRaceId, athlete, race, ...rest } = doc
+
+  const normalized: AthleteRaceAnalysis = {
+    ...(rest as Omit<AthleteRaceAnalysis, "athlete" | "race">),
+    athlete: {
+      ...athlete,
+      id: athlete.id ?? athlete.athleteId ?? legacyAthleteId ?? athlete.id,
+    },
+    race: {
+      ...race,
+      id: race.id ?? race.raceId ?? legacyRaceId ?? race.id,
+    },
+  }
+
+  return normalized
+}
+
+function normalizeAthlete(athlete: Athlete, raceLookup?: RaceAnalysisLookup): Athlete {
+  const recentRaces = Array.isArray(athlete.recentRaces)
+    ? athlete.recentRaces.map((race) => normalizeRecentRaceSummary(race as RawRecentRace, raceLookup))
+    : []
+  const prs = normalizeAthletePrs(athlete.prs, raceLookup)
+
+  return {
+    ...athlete,
+    recentRaces,
+    prs,
+  }
+}
+
+function normalizeRecentRaceSummary(race: RawRecentRace, raceLookup?: RaceAnalysisLookup): AthleteRaceSummary {
+  const nestedRace = typeof race.race === "object" ? race.race : undefined
+
+  const normalizedName = race.name ?? nestedRace?.name
+  const normalizedDate = race.date ?? nestedRace?.date
+
+  const normalizedRaceId =
+    race.raceId ??
+    race.id ??
+    race.race_id ??
+    race.raceID ??
+    nestedRace?.raceId ??
+    nestedRace?.id ??
+    nestedRace?.race_id ??
+    nestedRace?.raceID ??
+    (normalizedName ? raceLookup?.get(buildRaceLookupKey(normalizedName, normalizedDate)) : undefined)
+
+  const normalized: AthleteRaceSummary = {
+    ...race,
+    raceId: normalizedRaceId ?? race.raceId,
+    name: normalizedName ?? "",
+    date: normalizedDate ?? "",
+    location: race.location ?? nestedRace?.location ?? "",
+    distance: race.distance ?? nestedRace?.distance ?? "",
+  }
+
+  return normalized
+}
+
+function normalizeAthletePrs(prs: Athlete["prs"], raceLookup?: RaceAnalysisLookup): Athlete["prs"] {
+  if (!prs) return prs
+  const entries = Object.entries(prs) as Array<[keyof Athlete["prs"], AthletePR | undefined]>
+
+  const normalizedEntries = entries.reduce<Athlete["prs"]>((acc, [key, record]) => {
+    if (record) {
+      acc[key] = normalizePrRecord(record as RawPrRecord, raceLookup)
+    }
+    return acc
+  }, {} as Athlete["prs"])
+
+  return { ...prs, ...normalizedEntries }
+}
+
+function normalizePrRecord(record: RawPrRecord, raceLookup?: RaceAnalysisLookup): AthletePR {
+  const candidateNames = [
+    typeof record.race === "string" ? record.race : undefined,
+    record.raceDetails?.name,
+  ]
+
+  const candidateDates = [record.date, record.raceDetails?.date]
+
+  const normalizedRaceId =
+    record.raceId ??
+    record.raceDetails?.raceId ??
+    record.raceDetails?.id ??
+    record.raceDetails?.race_id ??
+    record.raceDetails?.raceID ??
+    candidateNames.reduce<string | undefined>((found, name) => {
+      if (found || !name) return found
+      return candidateDates.reduce<string | undefined>((innerFound, date) => {
+        if (innerFound) return innerFound
+        const key = buildRaceLookupKey(name, date)
+        return key ? raceLookup?.get(key) : undefined
+      }, undefined)
+    }, undefined)
+
+  return {
+    ...record,
+    raceId: normalizedRaceId ?? record.raceId,
+  }
+}
+
+function buildAthleteRaceAnalysisAthleteFilter(athleteId: string): Filter<AthleteRaceAnalysisDoc> {
+  return {
+    $or: ATHLETE_ANALYSIS_FIELDS.map((field) => ({ [field]: athleteId })),
+  } as Filter<AthleteRaceAnalysisDoc>
+}
+
+function buildRaceAnalysisLookup(docs: AthleteRaceAnalysis[]): RaceAnalysisLookup {
+  const lookup: RaceAnalysisLookup = new Map()
+
+  docs.forEach((doc) => {
+    const raceId = doc.race.id
+    if (!raceId) return
+
+    const keys = [
+      buildRaceLookupKey(doc.race.name, doc.race.date),
+      buildRaceLookupKey(doc.race.name, undefined),
+    ]
+
+    keys.forEach((key) => {
+      if (key && !lookup.has(key)) {
+        lookup.set(key, raceId)
+      }
+    })
+  })
+
+  return lookup
+}
+
+function buildRaceLookupKey(name?: string | null, date?: string | null) {
+  if (!name) return null
+  const normalizedName = name.trim().toLowerCase()
+  const normalizedDate = date?.trim().toLowerCase() ?? ""
+  return `${normalizedName}__${normalizedDate}`
 }

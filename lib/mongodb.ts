@@ -8,6 +8,9 @@ if (!uri) {
   throw new Error("MONGODB_URI is not defined in the environment")
 }
 
+export const DATA_DB_NAME = process.env.MONGODB_DATA_DB || "data"
+export const ADMIN_DB_NAME = process.env.MONGODB_ADMIN_DB || "admin"
+
 const options = {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -27,3 +30,13 @@ if (!globalForMongo._mongoClientPromise) {
 const clientPromise = globalForMongo._mongoClientPromise
 
 export default clientPromise
+
+export async function getDataDb() {
+  const client = await clientPromise
+  return client.db(DATA_DB_NAME)
+}
+
+export async function getAdminDb() {
+  const client = await clientPromise
+  return client.db(ADMIN_DB_NAME)
+}

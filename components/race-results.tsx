@@ -55,7 +55,7 @@ export function RaceResults({ raceId, results }: RaceResultsProps) {
               {results.map((result, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    <Link href={`/athlete/${result.athleteId}/race/${raceId}`} className="font-medium text-primary hover:underline">
+                    <Link href={`/athletes/${result.athleteId}/races/${raceId}`} className="font-medium text-primary hover:underline">
                       {result.name}
                     </Link>
                   </TableCell>
