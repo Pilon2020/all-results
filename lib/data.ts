@@ -2,17 +2,17 @@ import "server-only"
 
 import type { WithId } from "mongodb"
 
-import clientPromise from "./mongodb"
-
-const DB_NAME = process.env.MONGODB_DB || "all-results"
+import { getDataDb } from "./mongodb"
 
 export interface AthletePR {
   time: string
   race: string
   date: string
+  raceId?: string
 }
 
 export interface AthleteRaceSummary {
+  raceId: string
   name: string
   date: string
   location: string
@@ -75,6 +75,18 @@ export interface RaceProfile {
   bikeDistance: string
   runDistance: string
   results: RaceResultEntry[]
+}
+
+export interface RecentRaceSummary {
+  raceId: string
+  name: string
+  date: string
+  location: string
+  distance: string
+  participants: number
+  finishers: number
+  createdAt?: Date
+  topFinishers: RaceResultEntry[]
 }
 
 export interface AthleteRaceAnalysis {
@@ -156,9 +168,13 @@ export interface SearchDirectoryResults {
   }>
 }
 
-async function getDb() {
-  const client = await clientPromise
-  return client.db(DB_NAME)
+export interface RankedAthlete {
+  athleteId: string
+  firstName: string
+  lastName: string
+  country: string
+  team?: string
+  eloScore: number
 }
 
 function withoutId<T>(doc: WithId<T>): T {
@@ -171,13 +187,13 @@ function escapeRegexTerm(term: string) {
 }
 
 export async function getAthleteById(athleteId: string): Promise<Athlete | null> {
-  const db = await getDb()
+  const db = await getDataDb()
   const doc = await db.collection<Athlete>("athletes").findOne({ athleteId })
   return doc ? withoutId(doc) : null
 }
 
 export async function getRaceById(raceId: string): Promise<RaceProfile | null> {
-  const db = await getDb()
+  const db = await getDataDb()
   const doc = await db.collection<RaceProfile>("races").findOne({ raceId })
   return doc ? withoutId(doc) : null
 }
@@ -186,7 +202,7 @@ export async function getAthleteRaceAnalysis(
   athleteId: string,
   raceId: string,
 ): Promise<AthleteRaceAnalysis | null> {
-  const db = await getDb()
+  const db = await getDataDb()
   const doc = await db
     .collection<AthleteRaceAnalysis>("athleteRaceResults")
     .findOne({ "athlete.id": athleteId, "race.id": raceId })
@@ -194,7 +210,7 @@ export async function getAthleteRaceAnalysis(
 }
 
 export async function searchDirectory(query: string): Promise<SearchDirectoryResults> {
-  const db = await getDb()
+  const db = await getDataDb()
   const searchRegex = query ? new RegExp(escapeRegexTerm(query), "i") : null
 
   const athleteFilter = searchRegex
@@ -224,4 +240,47 @@ export async function searchDirectory(query: string): Promise<SearchDirectoryRes
       location: doc.location,
     })),
   }
+}
+
+export async function getRecentRaces(limit = 6): Promise<RecentRaceSummary[]> {
+  const db = await getDataDb()
+  const raceDocs = await db
+    .collection<RaceProfile>("races")
+    .find({}, { sort: { createdAt: -1, date: -1 } })
+    .limit(limit)
+    .toArray()
+
+  return raceDocs.map((doc) => {
+    const { createdAt } = doc as RaceProfile & { createdAt?: Date }
+
+    return {
+      raceId: doc.raceId,
+      name: doc.name,
+      date: doc.date,
+      location: doc.location,
+      distance: doc.distance,
+      participants: doc.participants,
+      finishers: doc.finishers,
+      createdAt,
+      topFinishers: doc.results?.slice(0, 3) ?? [],
+    }
+  })
+}
+
+export async function getTopAthletes(limit = 10): Promise<RankedAthlete[]> {
+  const db = await getDataDb()
+  const docs = await db
+    .collection<Athlete>("athletes")
+    .find({}, { sort: { eloScore: -1 } })
+    .limit(limit)
+    .toArray()
+
+  return docs.map((doc) => ({
+    athleteId: doc.athleteId,
+    firstName: doc.firstName,
+    lastName: doc.lastName,
+    country: doc.country,
+    team: doc.team,
+    eloScore: doc.eloScore,
+  }))
 }
