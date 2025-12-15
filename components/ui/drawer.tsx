@@ -1,9 +1,17 @@
 'use client'
 
 import * as React from 'react'
-import { Drawer as DrawerPrimitive } from 'vaul'
+import * as DrawerPrimitive from '@radix-ui/react-dialog'
 
 import { cn } from '@/lib/utils'
+
+type DrawerSide = 'top' | 'right' | 'bottom' | 'left'
+
+type DrawerContentProps = React.ComponentProps<
+  typeof DrawerPrimitive.Content
+> & {
+  side?: DrawerSide
+}
 
 function Drawer({
   ...props
@@ -48,24 +56,32 @@ function DrawerOverlay({
 function DrawerContent({
   className,
   children,
+  side = 'bottom',
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Content>) {
+}: DrawerContentProps) {
   return (
     <DrawerPortal data-slot="drawer-portal">
       <DrawerOverlay />
       <DrawerPrimitive.Content
         data-slot="drawer-content"
+        data-vaul-drawer-direction={side}
         className={cn(
-          'group/drawer-content bg-background fixed z-50 flex h-auto flex-col',
-          'data-[vaul-drawer-direction=top]:inset-x-0 data-[vaul-drawer-direction=top]:top-0 data-[vaul-drawer-direction=top]:mb-24 data-[vaul-drawer-direction=top]:max-h-[80vh] data-[vaul-drawer-direction=top]:rounded-b-lg data-[vaul-drawer-direction=top]:border-b',
-          'data-[vaul-drawer-direction=bottom]:inset-x-0 data-[vaul-drawer-direction=bottom]:bottom-0 data-[vaul-drawer-direction=bottom]:mt-24 data-[vaul-drawer-direction=bottom]:max-h-[80vh] data-[vaul-drawer-direction=bottom]:rounded-t-lg data-[vaul-drawer-direction=bottom]:border-t',
-          'data-[vaul-drawer-direction=right]:inset-y-0 data-[vaul-drawer-direction=right]:right-0 data-[vaul-drawer-direction=right]:w-3/4 data-[vaul-drawer-direction=right]:border-l data-[vaul-drawer-direction=right]:sm:max-w-sm',
-          'data-[vaul-drawer-direction=left]:inset-y-0 data-[vaul-drawer-direction=left]:left-0 data-[vaul-drawer-direction=left]:w-3/4 data-[vaul-drawer-direction=left]:border-r data-[vaul-drawer-direction=left]:sm:max-w-sm',
+          'group/drawer-content bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex h-auto flex-col',
+          side === 'top' &&
+            'inset-x-0 top-0 mb-24 max-h-[80vh] rounded-b-lg border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top',
+          side === 'bottom' &&
+            'inset-x-0 bottom-0 mt-24 max-h-[80vh] rounded-t-lg border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom',
+          side === 'right' &&
+            'inset-y-0 right-0 w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm',
+          side === 'left' &&
+            'inset-y-0 left-0 w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm',
           className,
         )}
         {...props}
       >
-        <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+        {side === 'bottom' && (
+          <div className="bg-muted mx-auto mt-4 hidden h-2 w-[100px] shrink-0 rounded-full group-data-[vaul-drawer-direction=bottom]/drawer-content:block" />
+        )}
         {children}
       </DrawerPrimitive.Content>
     </DrawerPortal>
