@@ -59,6 +59,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
+    "vercel": "^50.0.1",
     "zod": "3.25.76"
   },
   "devDependencies": {

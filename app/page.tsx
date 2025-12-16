@@ -3,7 +3,7 @@ import { SearchBar } from "@/components/search-bar"
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background dark:bg-[oklch(0.18,0,0)]">
       <Header />
 
       <main className="container mx-auto px-4 py-20">
@@ -25,7 +25,6 @@ export default function HomePage() {
             <span>Search for:</span>
             <span className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground">Athletes</span>
             <span className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground">Races</span>
-            <span className="px-3 py-1 rounded-full bg-secondary text-secondary-foreground">Results</span>
           </div>
         </div>
       </main>

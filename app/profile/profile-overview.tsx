@@ -25,6 +25,7 @@ type AthletePayload = {
   country?: string
   team?: string
   prs?: {
+    superSprint?: { time?: string; race?: string }
     sprint?: { time?: string; race?: string }
     olympic?: { time?: string; race?: string }
     half?: { time?: string; race?: string }

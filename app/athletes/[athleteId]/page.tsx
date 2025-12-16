@@ -4,7 +4,8 @@ import { Header } from "@/components/header"
 import { AthleteHeader } from "@/components/athlete-header"
 import { AthletePRs } from "@/components/athlete-prs"
 import { AthleteContent } from "@/components/athlete-content"
-import { getAthleteById } from "@/lib/data"
+import { AthleteMergeSuggestions } from "@/components/athlete-merge-suggestions"
+import { getAthleteById, getPotentialAthleteMergeResults } from "@/lib/data"
 
 type AthleteProfilePageProps = {
   params: Promise<{ athleteId: string }>
@@ -13,6 +14,7 @@ type AthleteProfilePageProps = {
 export default async function AthleteProfilePage({ params }: AthleteProfilePageProps) {
   const { athleteId } = await params
   const athlete = await getAthleteById(athleteId)
+  const mergeSuggestions = athlete ? await getPotentialAthleteMergeResults(athlete.athleteId) : []
 
   if (!athlete) {
     notFound()
@@ -30,8 +32,16 @@ export default async function AthleteProfilePage({ params }: AthleteProfilePageP
           </div>
 
           <div className="lg:col-span-1">
-            <AthletePRs prs={athlete.prs} athleteId={athlete.athleteId} />
+            <AthletePRs prs={athlete.prs} athleteId={athlete.athleteId} races={athlete.recentRaces} />
           </div>
+        </div>
+
+        <div className="mt-8">
+          <AthleteMergeSuggestions
+            athleteId={athlete.athleteId}
+            isClaimed={athlete.isClaimed}
+            suggestions={mergeSuggestions}
+          />
         </div>
       </main>
     </div>

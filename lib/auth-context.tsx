@@ -17,13 +17,14 @@ const SESSION_KEY = "user"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const request = async <T>(url: string, body: unknown): Promise<T> => {
+const request = async <T>(url: string, body: unknown, init?: RequestInit): Promise<T> => {
   let response: Response
 
   try {
     response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      ...init,
+      method: init?.method ?? "POST",
+      headers: { "Content-Type": "application/json", ...(init?.headers as HeadersInit | undefined) },
       body: JSON.stringify(body),
     })
   } catch {
@@ -84,10 +85,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       throw new Error("You must be signed in to update your profile.")
     }
 
-    const { user: updatedUser } = await request<{ user: PublicUser }>("/api/profile", {
-      userId: user.id,
-      ...data,
-    })
+    const { user: updatedUser } = await request<{ user: PublicUser }>(
+      "/api/profile",
+      {
+        userId: user.id,
+        ...data,
+      },
+      { method: "PATCH" },
+    )
     persistSession(updatedUser)
     return updatedUser
   }

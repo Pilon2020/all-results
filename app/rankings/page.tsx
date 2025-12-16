@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { getTopAthletes } from "@/lib/data"
 
-export const revalidate = 300
+export const dynamic = "force-dynamic"
 
 export default async function RankingsPage() {
   const topAthletes = await getTopAthletes(10)
@@ -23,8 +23,7 @@ export default async function RankingsPage() {
           </Badge>
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">Top 10 Athletes by ELO</h1>
           <p className="text-lg text-muted-foreground">
-            Updated automatically as new race results land. The leaderboard highlights who&apos;s trending and which
-            federations or squads are dominating the scene.
+            Updated automatically as new race results land.
           </p>
         </section>
 

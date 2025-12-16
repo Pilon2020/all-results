@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 
 import { Header } from "@/components/header"
 import { RaceAnalysisHeader } from "@/components/race-analysis-header"
@@ -8,7 +8,7 @@ import { RaceAnalysisOverview } from "@/components/race-analysis-overview"
 import { RaceAnalysisSplits } from "@/components/race-analysis-splits"
 import { RaceAnalysisComparison } from "@/components/race-analysis-comparison"
 import { Button } from "@/components/ui/button"
-import { getAthleteRaceAnalysis } from "@/lib/data"
+import { getAthleteById, getAthleteRaceAnalysis } from "@/lib/data"
 
 type AthleteRaceAnalysisPageProps = {
   params: Promise<{ athleteId: string; raceId: string }>
@@ -19,6 +19,10 @@ export default async function AthleteRaceAnalysisPage({ params }: AthleteRaceAna
   const data = await getAthleteRaceAnalysis(athleteId, raceId)
 
   if (!data) {
+    const athlete = await getAthleteById(athleteId)
+    if (athlete) {
+      redirect(`/athletes/${athleteId}`)
+    }
     notFound()
   }
 

@@ -1,29 +1,40 @@
 import { Calendar, MapPin, Users, Trophy, Cloud } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { formatDistance } from "@/lib/utils"
 
 interface RaceHeaderProps {
   race: {
     name: string
     date: string
-    location: string
-    distance: string
-    participants: number
-    finishers: number
-    weather: string
-    swimDistance: string
-    bikeDistance: string
-    runDistance: string
+  location: string
+  distance: string
+  draftLegal?: boolean
+  participants: number
+  finishers: number
+  weather: string
+  swimDistance: string
+  bikeDistance: string
+  runDistance: string
   }
 }
 
 export function RaceHeader({ race }: RaceHeaderProps) {
+  const draftLegal = race.draftLegal === true
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <Badge variant="secondary" className="text-xs">
-          {race.distance}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            {formatDistance(race.distance)}
+          </Badge>
+          {draftLegal && (
+            <Badge variant="outline" className="text-xs">
+              Draft Legal
+            </Badge>
+          )}
+        </div>
         <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-balance">{race.name}</h1>
       </div>
 

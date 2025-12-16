@@ -12,8 +12,7 @@ const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "RaceTrack - Race Results & Athlete Analysis",
-  description: "Comprehensive race results analysis and athlete performance tracking",
-  generator: "v0.app",
+  description: "Comprehensive race results analysis and athlete performance tracking"
 }
 
 export default function RootLayout({
@@ -29,7 +28,6 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          forcedTheme="system"
           disableTransitionOnChange
           storageKey="rt-color-scheme"
         >

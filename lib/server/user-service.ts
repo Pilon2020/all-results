@@ -79,6 +79,13 @@ type ClaimDocument = {
   userObjectId: MongoId
 }
 
+type AthleteDocument = {
+  athleteId: string
+  age?: number | string | null
+  country?: string | null
+  team?: string | null
+}
+
 const getEncryptionKey = () => {
   const secret = process.env.USER_ENCRYPTION_SECRET ?? process.env.NEXT_PUBLIC_DEV_ENCRYPTION_SECRET ?? "__rt-dev-secret__"
   if (!secret) {
@@ -187,6 +194,35 @@ const sanitizeSocialLinks = (links?: ProfileUpdateInput["socialLinks"]) => {
 
   const hasLinks = Boolean(normalized.strava || normalized.instagram)
   return hasLinks ? normalized : undefined
+}
+
+const applyAthleteDetailsToProfile = (profile: ProfilePayload, athlete?: AthleteDocument | null) => {
+  if (!athlete) {
+    return profile
+  }
+
+  const nextProfile: ProfilePayload = { ...profile }
+
+  if (typeof athlete.age === "number" && Number.isFinite(athlete.age)) {
+    nextProfile.age = athlete.age
+  } else if (typeof athlete.age === "string") {
+    const parsed = Number(athlete.age)
+    if (Number.isFinite(parsed)) {
+      nextProfile.age = parsed
+    }
+  }
+
+  const country = sanitizeOptionalString(athlete.country)
+  if (country !== undefined) {
+    nextProfile.country = country
+  }
+
+  const team = sanitizeOptionalString(athlete.team)
+  if (team !== undefined) {
+    nextProfile.team = team
+  }
+
+  return nextProfile
 }
 
 const mergeProfile = (current: ProfilePayload, updates: ProfileUpdateInput): ProfilePayload => {
@@ -347,9 +383,13 @@ export async function assignClaimedAthlete(userId: string, athleteId: string): P
   }
 
   const { users, userObjectId, doc } = await getUserDocumentById(userId)
+  const db = await getDataDb()
+  const athlete = await db.collection<AthleteDocument>("athletes").findOne({ athleteId })
 
-  const profile = decryptProfile(doc.profile)
-  profile.claimedAthleteId = athleteId
+  const profile = applyAthleteDetailsToProfile(
+    { ...decryptProfile(doc.profile), claimedAthleteId: athleteId },
+    athlete,
+  )
 
   const encryptedProfile = encryptProfile(profile)
   await users.updateOne(

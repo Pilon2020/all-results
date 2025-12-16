@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Trophy, TrendingUp, Target, Calendar, Award, Flag } from "lucide-react"
+import { formatDistance } from "@/lib/utils"
 
 export function AthleteStats() {
   const stats = [
@@ -87,7 +88,7 @@ export function AthleteStats() {
           ].map((item, index) => (
             <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-muted">
               <div>
-                <p className="font-medium">{item.distance}</p>
+                <p className="font-medium">{formatDistance(item.distance)}</p>
                 <p className="text-xs text-muted-foreground mt-1">{item.stdDev}</p>
               </div>
               <p className="text-xl font-bold font-mono">{item.time}</p>

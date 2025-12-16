@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, MapPin, Trophy, ExternalLink } from "lucide-react"
+import { formatDistance } from "@/lib/utils"
 
 interface RaceAnalysisHeaderProps {
   athlete: {
@@ -38,7 +39,7 @@ export function RaceAnalysisHeader({ athlete, race, performance }: RaceAnalysisH
           <Badge variant="outline">{athlete.country}</Badge>
           <Badge variant="outline">Age {athlete.age}</Badge>
           <Badge variant="outline">Bib #{performance.bib}</Badge>
-          <Badge variant="secondary">{race.distance}</Badge>
+          <Badge variant="secondary">{formatDistance(race.distance)}</Badge>
         </div>
       </div>
 

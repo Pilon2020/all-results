@@ -29,6 +29,9 @@ const createEmptyResults = (): DirectorySuggestions => ({
   races: [],
 })
 
+const MAX_ATHLETE_RESULTS = 5
+const MAX_RACE_RESULTS = 3
+
 export function SearchBar() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<DirectorySuggestions>(createEmptyResults)
@@ -40,6 +43,10 @@ export function SearchBar() {
 
   const normalizedQuery = query.trim()
   const shouldShowPanel = panelOpen && (normalizedQuery.length > 0 || isLoading)
+  const displayedAthletes = results.athletes.slice(0, MAX_ATHLETE_RESULTS)
+  const displayedRaces = results.races.slice(0, MAX_RACE_RESULTS)
+  const hasMoreResults =
+    results.athletes.length > MAX_ATHLETE_RESULTS || results.races.length > MAX_RACE_RESULTS
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -109,13 +116,13 @@ export function SearchBar() {
   }
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-2xl">
+    <div ref={containerRef} className="relative z-[300] w-full max-w-2xl">
       <form onSubmit={handleSearch}>
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search athletes, races, or results..."
+            placeholder="Search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setPanelOpen(true)}
@@ -129,7 +136,7 @@ export function SearchBar() {
       </form>
 
       {shouldShowPanel && (
-        <div className="absolute left-0 right-0 top-full z-20 mt-3 rounded-xl border bg-card/95 shadow-2xl backdrop-blur">
+        <div className="absolute left-0 right-0 top-full z-[310] mt-3 rounded-xl border bg-card/95 shadow-2xl backdrop-blur">
           {normalizedQuery.length < 2 ? (
             <p className="px-4 py-6 text-sm text-muted-foreground">Type at least two characters to search.</p>
           ) : isLoading ? (
@@ -144,7 +151,7 @@ export function SearchBar() {
                   Athletes
                 </div>
                 <div className="space-y-1">
-                  {results.athletes.map((athlete) => (
+                  {displayedAthletes.map((athlete) => (
                     <button
                       key={athlete.athleteId}
                       type="button"
@@ -170,7 +177,7 @@ export function SearchBar() {
                   Race Results
                 </div>
                 <div className="space-y-1">
-                  {results.races.map((race) => (
+                  {displayedRaces.map((race) => (
                     <button
                       key={race.raceId}
                       type="button"
@@ -188,6 +195,17 @@ export function SearchBar() {
                   )}
                 </div>
               </section>
+              {hasMoreResults && (
+                <div className="border-t">
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(`/search?q=${encodeURIComponent(normalizedQuery)}`)}
+                    className="flex w-full items-center justify-center px-4 py-3 text-sm font-medium text-primary transition-colors hover:bg-muted"
+                  >
+                    More results for &quot;{normalizedQuery}&quot;
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
